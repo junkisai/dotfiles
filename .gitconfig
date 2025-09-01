@@ -1,0 +1,21 @@
+[user]
+	name = junkisai
+	email = jonki.beam@gmail.com
+[core]
+	ignorecase = false
+	quotepath = false
+[rebase]
+	autosquash = true
+[fetch]
+    prune = true
+[push]
+	default = current
+[alias]
+	br = branch
+	co = checkout
+    sw = switch
+    swc = switch -c
+    logo = log --oneline
+    fix = commit --fixup
+    rebasef = rebase -i --autosquash
+    refresh = !git branch --merged | egrep -v '\\*|develop|main' | xargs git branch -d
