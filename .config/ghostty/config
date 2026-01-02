@@ -50,8 +50,7 @@
 
 theme = tokyonight
 
-font-family = "JetBrains Mono"
-font-family = "BIZ UDGothic Bold"
+font-family = "Maple Mono"
 font-size = 14
 font-thicken = true
 
