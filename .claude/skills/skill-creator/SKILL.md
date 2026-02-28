@@ -405,6 +405,31 @@ Take `best_description` from the JSON output and update the skill's SKILL.md fro
 
 ---
 
+### Cross-Agent Setup
+
+After the skill is finalized, create symlinks so the skill is available in all supported agent tools (Antigravity, Codex, Gemini CLI).
+
+```bash
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+SKILL_NAME=<skill-name>
+
+# Antigravity (.agent/skills/)
+if [ -d "$REPO_ROOT/.agent/skills" ]; then
+  ln -sf "../../.claude/skills/$SKILL_NAME" "$REPO_ROOT/.agent/skills/$SKILL_NAME"
+  echo "✓ Linked to .agent/skills/ (Antigravity)"
+fi
+
+# Codex + Gemini CLI (.agents/skills/)
+if [ -d "$REPO_ROOT/.agents/skills" ]; then
+  ln -sf "../../.claude/skills/$SKILL_NAME" "$REPO_ROOT/.agents/skills/$SKILL_NAME"
+  echo "✓ Linked to .agents/skills/ (Codex / Gemini CLI)"
+fi
+```
+
+Report which links were created to the user. If either directory doesn't exist, skip it silently — the user may not use all agent tools.
+
+---
+
 ### Package and Present (only if `present_files` tool is available)
 
 Check whether you have access to the `present_files` tool. If you don't, skip this step. If you do, package the skill and present the .skill file to the user:
