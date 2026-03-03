@@ -67,7 +67,7 @@ description: |
 実行後、以下のファイルを生成する：
 
 ```
-idea-scout-output/
+idea-scout-<テーマやトピック名>/
 ├── REPORTS.md          ← 5件のサマリー
 ├── idea-1-<name>.md    ← 各アイデアの詳細
 ├── idea-2-<name>.md
@@ -77,7 +77,7 @@ idea-scout-output/
 └── competitors.csv     ← 競合一覧
 ```
 
-出力先ディレクトリは、ユーザーが指定した場合はそこに、指定がなければ **現在の Git リポジトリのルート**に `idea-scout-output/` を作成する。
+出力先ディレクトリは、ユーザーが指定した場合はそこに、指定がなければ **現在の Git リポジトリのルート**に、ビジネスアイデアのテーマや内容がひと目でわかるような命名（例: `idea-scout-sns-tools/`, `idea-scout-dev-tools/` など）でフォルダを作成する。
 リポジトリルートは `git rev-parse --show-toplevel` で取得する。Git リポジトリ外で実行された場合はカレントディレクトリにフォールバックする。
 
 ---
