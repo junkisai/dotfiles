@@ -1,0 +1,23 @@
+{
+  "skill_name": "browser-check",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "サイドメニューの active 表示まわりを直したので、ブラウザで確認して",
+      "expected_output": "影響範囲を観測可能な振る舞いに翻訳し、チェックリストを作り、Playwright CLI でブラウザを駆動して一つずつ観測する。モード未指定なので local/staging を確認する",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "/browser-check staging このPRをstagingで確認してPRにメモ残して",
+      "expected_output": "起動済み Chrome に attach し実認証で観測。結果をテキストのチェックリストとして gh pr comment で投稿する",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "/browser-check local エラー時の表示を作り込んで確認したい",
+      "expected_output": "自分でアプリを起動（起動コマンドは実行時確認）し認証バイパス前提で、エラー状態を作って画面の振る舞いを観測する",
+      "files": []
+    }
+  ]
+}
