@@ -1,0 +1,4 @@
+interface:
+  display_name: "業務報告"
+  short_description: "Create concise Japanese work reports from GitHub PRs"
+  default_prompt: "Use $work-report to create a concise Japanese work report from today's GitHub PRs."
