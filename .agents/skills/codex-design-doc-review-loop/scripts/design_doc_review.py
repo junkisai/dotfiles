@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""実装計画レビューループの駆動スクリプト。
+"""design doc レビューループの駆動スクリプト。
 
 Codex CLI または Claude Code CLI をレビュアーとして呼び出し、
 プロンプト生成・実行・結果解析・waiver適用・停滞検出・エビデンス検証を行う。
 呼び出し側エージェントの仕事は、このスクリプトの実行、レビュー報告の提示、
-blocking指摘に基づく計画ファイルの修正だけにする。
+blocking指摘に基づく design doc ファイルの修正だけにする。
 
 Python 3.9+ / 標準ライブラリのみで動作する。
 
@@ -79,7 +79,7 @@ DEFAULT_CONFIG = {
     "requireHumanOnFirstRound": True,
     "requireHumanOnNewHighSeverity": True,
     "perspectives": {
-        "correctness": "実装計画の内容が要件と一致しているか",
+        "correctness": "design doc の内容が要件と一致しているか",
         "spec_mismatch": "仕様との不一致がないか",
         "missing_acceptance_criteria": "受け入れ基準の漏れがないか",
         "migration_risk": "マイグレーションリスクがないか",
@@ -93,7 +93,7 @@ DEFAULT_CONFIG = {
     "claudeExtraArgs": [],
 }
 
-PROJECT_CONFIG_PATH = os.path.join(".agents", "plan-review.json")
+PROJECT_CONFIG_PATH = os.path.join(".agents", "design-doc-review.json")
 
 CLAUDE_ALLOWED_TOOLS = (
     "Read Grep Glob WebSearch WebFetch "
@@ -107,7 +107,7 @@ CLAUDE_DISALLOWED_TOOLS = (
 
 WAIVER_KEYWORDS = ("以後", "今後", "以降", "今回以降")
 
-STATE_MARKER = "===PLAN_REVIEW_STATE==="
+STATE_MARKER = "===DESIGN_DOC_REVIEW_STATE==="
 
 
 # ---------------------------------------------------------------------------
@@ -202,7 +202,7 @@ def finding_criteria_section():
     """指摘の採用条件。
 
     敵対的検証（反証を試みる姿勢）と対にして、根拠を示せる指摘だけに絞る。
-    姿勢だけを強めると些末な指摘や過剰に防御的な計画の要求が増えるため、
+    姿勢だけを強めると些末な指摘や過剰に防御的な design doc の要求が増えるため、
     採用条件・severity基準・除外種別は必ずこの節でセットで渡す。
     """
     return "\n".join([
@@ -211,11 +211,11 @@ def finding_criteria_section():
         "指摘として出力してよいのは、根拠を具体的に示せるものだけです。"
         "指摘の種類ごとに、示すべき根拠は次のとおりです。",
         "",
-        "- 要件との不一致: 要件のどの記述と、計画のどの部分が食い違うか（要件にある事項の欠落を含む）",
-        "- 破綻シナリオ: 計画のどの手順が、どの前提・制約・既存実装のもとで実装不能や手戻りになるか",
-        "- 記述の曖昧さ: 計画のどの記述が、どのように複数解釈できて実装時の判断がつかないか",
+        "- 要件との不一致: 要件のどの記述と、design doc のどの部分が食い違うか（要件にある事項の欠落を含む）",
+        "- 破綻シナリオ: design doc のどの手順が、どの前提・制約・既存実装のもとで実装不能や手戻りになるか",
+        "- 記述の曖昧さ: design doc のどの記述が、どのように複数解釈できて実装時の判断がつかないか",
         "",
-        "各指摘の detail には、計画・要件・既存実装の該当箇所とこの根拠を書いてください。"
+        "各指摘の detail には、design doc ・要件・既存実装の該当箇所とこの根拠を書いてください。"
         "確信の持てない懸念・裏取りできなかった推測は出力しないでください。"
         "反証を試みて壊せなかった場合、指摘ゼロは正当な結果です。指摘を捻り出す必要はありません。",
         "",
@@ -233,7 +233,7 @@ def finding_criteria_section():
     ])
 
 
-def build_initial_prompt(state, plan_text, req_text, changes_summary=None):
+def build_initial_prompt(state, design_doc_text, req_text, changes_summary=None):
     """初回レビュー用の完全なプロンプト。
 
     changes_summary が渡された場合は、2回目以降のラウンドでresumeに失敗して
@@ -245,26 +245,26 @@ def build_initial_prompt(state, plan_text, req_text, changes_summary=None):
         "   - {}: {}".format(k, v) for k, v in config["perspectives"].items()
     )
     parts = [
-        "あなたは実装計画の独立レビュアーです。この実装計画はAIエージェントが作成した"
+        "あなたは design doc の独立レビュアーです。この design doc はAIエージェントが作成した"
         "一次成果物で、人間による検収の前に、要件を満たすこと・実装時に破綻しないことの"
-        "反証を試みる敵対的検証があなたの役割です。以下の実装計画をレビューしてください。",
+        "反証を試みる敵対的検証があなたの役割です。以下の design doc をレビューしてください。",
         "",
-        "## レビュー対象の実装計画",
+        "## レビュー対象の design doc",
         "",
-        plan_text,
+        design_doc_text,
         "",
-        "## 実装計画の元となった要件（プロンプト）",
+        "## design doc の元となった要件（プロンプト）",
         "",
         req_text,
         "",
     ]
     if changes_summary is not None:
         parts += [
-            "## 直前のラウンドで計画に加えられた修正の概要",
+            "## 直前のラウンドで design doc に加えられた修正の概要",
             "",
-            "この計画はレビューと修正のループの途中です。以下は直前のレビュー指摘に対する修正内容です。",
+            "この design doc はレビューと修正のループの途中です。以下は直前のレビュー指摘に対する修正内容です。",
             "",
-            changes_summary or "（修正サマリーの提供なし。計画全文を確認してください）",
+            changes_summary or "（修正サマリーの提供なし。design doc 全文を確認してください）",
             "",
         ]
     parts += [
@@ -284,21 +284,21 @@ def build_initial_prompt(state, plan_text, req_text, changes_summary=None):
     return "\n".join(parts)
 
 
-def build_rereview_prompt(state, plan_text, req_text, changes_summary):
+def build_rereview_prompt(state, design_doc_text, req_text, changes_summary):
     parts = [
-        "実装計画が修正されました。修正後の計画を改めてレビューしてください。",
+        "design doc が修正されました。修正後の design doc を改めてレビューしてください。",
         "",
-        "## 修正後の実装計画",
+        "## 修正後の design doc",
         "",
-        plan_text,
+        design_doc_text,
         "",
-        "## 実装計画の元となった要件（プロンプト）",
+        "## design doc の元となった要件（プロンプト）",
         "",
         req_text,
         "",
         "## 修正内容の概要",
         "",
-        changes_summary or "（修正サマリーの提供なし。計画全文を再確認してください）",
+        changes_summary or "（修正サマリーの提供なし。design doc 全文を再確認してください）",
         "",
         "## レビュー指示",
         "",
@@ -313,7 +313,7 @@ def build_rereview_prompt(state, plan_text, req_text, changes_summary):
     return "\n".join(parts)
 
 
-def build_feedback_prompt(state, plan_text, req_text, findings, feedback_text,
+def build_feedback_prompt(state, design_doc_text, req_text, findings, feedback_text,
                           fresh_session=False):
     """フィードバック反映用のプロンプト。
 
@@ -326,14 +326,14 @@ def build_feedback_prompt(state, plan_text, req_text, findings, feedback_text,
         listed.append("### {} [{}] {}\n{}\n{}".format(
             f["id"], f["severity"].upper(), f["category"], f["summary"], f["detail"]))
     parts = [
-        "あなたは実装計画の独立レビュアーです。前回のレビューに対して人間からフィードバックが"
+        "あなたは design doc の独立レビュアーです。前回のレビューに対して人間からフィードバックが"
         "あったため、調整後のレビュー結果を出力してください。",
         "",
-        "## レビュー対象の実装計画",
+        "## レビュー対象の design doc",
         "",
-        plan_text,
+        design_doc_text,
         "",
-        "## 実装計画の元となった要件（プロンプト）",
+        "## design doc の元となった要件（プロンプト）",
         "",
         req_text,
         "",
@@ -349,7 +349,7 @@ def build_feedback_prompt(state, plan_text, req_text, findings, feedback_text,
         "",
         "1. waiveまたは対象外と指示された指摘は含めないでください",
         "2. フィードバックで修正方針が示された指摘は、その方針を反映して調整してください。"
-        "ただし「これから修正する」と表明されただけの指摘は、計画自体はまだ修正されていない"
+        "ただし「これから修正する」と表明されただけの指摘は、design doc 自体はまだ修正されていない"
         "ため、そのまま残してください",
         "3. フィードバックで言及されていない指摘はそのまま残してください",
         "4. 新たに気づいた指摘があれば追加してください",
@@ -611,7 +611,7 @@ def extract_waivers(feedback_text):
 # エビデンス検証
 # ---------------------------------------------------------------------------
 
-def evidence_check(state, jsonl_path, plan_text, req_text):
+def evidence_check(state, jsonl_path, design_doc_text, req_text):
     """レビュアーの実行ログから、情報源の使用状況を検出する。
 
     使用実績はレビュアーのセッションが継続している間（resume成功時）は
@@ -619,7 +619,7 @@ def evidence_check(state, jsonl_path, plan_text, req_text):
     正当な振る舞いのため。新規セッション（初回・resumeフォールバック時）は
     レビュアーに記憶が無いため引き継がない。
     """
-    combined = plan_text + "\n" + req_text
+    combined = design_doc_text + "\n" + req_text
     needs_gh = bool(re.search(r"https?://github\.com/", combined))
     needs_figma = bool(re.search(r"https?://(?:www\.)?figma\.com/", combined))
     # GitHub/Figma以外のURL（Webドキュメント等）。こちらは必須ではなく参考扱い
@@ -719,7 +719,7 @@ def render_finding(f):
         "**詳細:** {}".format(f["detail"]),
     ]
     if f.get("lineRef"):
-        lines.append("**計画の該当箇所:** {}".format(f["lineRef"]))
+        lines.append("**design doc の該当箇所:** {}".format(f["lineRef"]))
     return "\n".join(lines)
 
 
@@ -759,7 +759,7 @@ def render_report(state, round_no, blocking, non_blocking, waived, evidence, nex
         lines.append("- WebドキュメントのURLあり → Web検索・取得: {}（参考）".format(
             mark(evidence["webUsed"], evidence.get("webCarriedOver"))))
     if not (evidence["needsGh"] or evidence["needsFigma"] or evidence["needsWebDocs"]):
-        lines.append("- 計画・要件に外部URLはありません（確認必須の情報源なし）")
+        lines.append("- design doc ・要件に外部URLはありません（確認必須の情報源なし）")
     lines.append("")
 
     warnings = []
@@ -774,7 +774,7 @@ def render_report(state, round_no, blocking, non_blocking, waived, evidence, nex
             "再実行するかユーザーに確認してください。".format("、".join(missing)))
     if evidence["needsWebDocs"] and not evidence["webUsed"]:
         warnings.append(
-            "**参考:** 計画・要件にWebドキュメントのURLがありますが、Web検索・取得の使用を"
+            "**参考:** design doc ・要件にWebドキュメントのURLがありますが、Web検索・取得の使用を"
             "検出できませんでした（必須ではないため続行可能です）。")
     if evidence["builtinGithubAppUsed"]:
         warnings.append(
@@ -790,8 +790,8 @@ def render_report(state, round_no, blocking, non_blocking, waived, evidence, nex
                    "- 「finding-1は対象外としてください」→ feedbackコマンドで反映\n"
                    "- 「以後、互換性に関する指摘は除外でお願いします」→ feedbackコマンドで反映"
                    "（waiverとして自動保存されます）\n"
-                   "- 「全て修正をお願いします」→ 計画ファイルを修正して次のreviewへ"),
-        "fix_plan": ("---\nblocking findingsに基づいて計画ファイルを修正し、修正サマリーを"
+                   "- 「全て修正をお願いします」→ design doc ファイルを修正して次のreviewへ"),
+        "fix_design_doc": ("---\nblocking findingsに基づいて design doc ファイルを修正し、修正サマリーを"
                      "ファイルに書き出してから `review --run <runDir> --changes-file <path>` "
                      "を実行してください。"),
         "done": "---\nblocking findingsは0件です。レビューループは完了です。",
@@ -845,9 +845,9 @@ def process_results(state, run_dir, raw_text, jsonl_path, round_no, is_feedback)
     findings = parse_findings(raw_text)
     blocking, non_blocking, waived = classify(findings, config, state["waivers"])
 
-    plan_text = read_file(state["planFile"], "planFile")
+    design_doc_text = read_file(state["designDocFile"], "designDocFile")
     req_text = read_file(state["reqFile"], "reqFile")
-    evidence = evidence_check(state, jsonl_path, plan_text, req_text)
+    evidence = evidence_check(state, jsonl_path, design_doc_text, req_text)
 
     fps = sorted(fingerprint(f) for f in blocking)
     high_fps = sorted(fingerprint(f) for f in blocking if f["severity"] == "high")
@@ -893,9 +893,9 @@ def process_results(state, run_dir, raw_text, jsonl_path, round_no, is_feedback)
         next_action = "max_rounds"
         state["endReason"] = "max_rounds"
     else:
-        next_action = "fix_plan"
+        next_action = "fix_design_doc"
 
-    if next_action in ("triage", "fix_plan"):
+    if next_action in ("triage", "fix_design_doc"):
         state["currentRound"] = round_no + 1
 
     save_state(state["runDir"], state)
@@ -925,19 +925,19 @@ def cmd_start(args):
     if args.stagnation_rounds is not None:
         config["stagnationRounds"] = args.stagnation_rounds
 
-    plan_text = read_file(args.plan, "planFile")
+    design_doc_text = read_file(args.design_doc, "designDocFile")
     read_file(args.req, "promptFile")
-    if not plan_text.strip():
-        die("planFile が空です: {}".format(args.plan))
+    if not design_doc_text.strip():
+        die("designDocFile が空です: {}".format(args.design_doc))
 
-    run_dir = tempfile.mkdtemp(prefix="plan-review-")
+    run_dir = tempfile.mkdtemp(prefix="design-doc-review-")
     schema_path = os.path.join(run_dir, "findings-schema.json")
     with open(schema_path, "w", encoding="utf-8") as f:
         json.dump(FINDINGS_SCHEMA, f, ensure_ascii=False, indent=2)
 
     state = {
         "backend": args.backend,
-        "planFile": os.path.abspath(args.plan),
+        "designDocFile": os.path.abspath(args.design_doc),
         "reqFile": os.path.abspath(args.req),
         "config": config,
         "runDir": run_dir,
@@ -956,7 +956,7 @@ def cmd_start(args):
     print(json.dumps({
         "runDir": run_dir,
         "backend": args.backend,
-        "planFile": state["planFile"],
+        "designDocFile": state["designDocFile"],
         "reqFile": state["reqFile"],
         "configSource": config.pop("_configPath", "defaults"),
         "maxRounds": config["maxRounds"],
@@ -977,15 +977,15 @@ def cmd_review(args):
     if args.changes_file:
         changes = read_file(args.changes_file, "changes-file")
 
-    plan_text = read_file(state["planFile"], "planFile")
+    design_doc_text = read_file(state["designDocFile"], "designDocFile")
     req_text = read_file(state["reqFile"], "reqFile")
     if round_no == 1:
-        prompt = build_initial_prompt(state, plan_text, req_text)
+        prompt = build_initial_prompt(state, design_doc_text, req_text)
         fresh_prompt = None
     else:
-        prompt = build_rereview_prompt(state, plan_text, req_text, changes)
+        prompt = build_rereview_prompt(state, design_doc_text, req_text, changes)
         # resumeに失敗して新規セッションになった場合用の完全版プロンプト
-        fresh_prompt = build_initial_prompt(state, plan_text, req_text, changes_summary=changes)
+        fresh_prompt = build_initial_prompt(state, design_doc_text, req_text, changes_summary=changes)
 
     raw_text, jsonl_path = run_reviewer(
         state, args.run, prompt, "round{}".format(round_no), fresh_prompt)
@@ -1005,12 +1005,12 @@ def cmd_feedback(args):
 
     last_round = state["rounds"][-1]["round"] if state["rounds"] else 1
     findings = state["lastFindings"]["blocking"] + state["lastFindings"]["nonBlocking"]
-    plan_text = read_file(state["planFile"], "planFile")
+    design_doc_text = read_file(state["designDocFile"], "designDocFile")
     req_text = read_file(state["reqFile"], "reqFile")
-    prompt = build_feedback_prompt(state, plan_text, req_text, findings, feedback_text)
+    prompt = build_feedback_prompt(state, design_doc_text, req_text, findings, feedback_text)
     # resume失敗時の新規セッション用（採用条件・編集禁止を含む完全版）
     fresh_prompt = build_feedback_prompt(
-        state, plan_text, req_text, findings, feedback_text, fresh_session=True)
+        state, design_doc_text, req_text, findings, feedback_text, fresh_session=True)
 
     raw_text, jsonl_path = run_reviewer(
         state, args.run, prompt, "feedback-round{}".format(last_round), fresh_prompt)
@@ -1023,7 +1023,7 @@ def cmd_status(args):
     state = load_state(args.run)
     print(json.dumps({
         "backend": state["backend"],
-        "planFile": state["planFile"],
+        "designDocFile": state["designDocFile"],
         "reqFile": state["reqFile"],
         "currentRound": state["currentRound"],
         "rounds": state["rounds"],
@@ -1038,16 +1038,16 @@ def main():
 
     p = sub.add_parser("start", help="レビューランを初期化する")
     p.add_argument("--backend", choices=["codex", "claude"], required=True)
-    p.add_argument("--plan", required=True, help="レビュー対象の実装計画ファイル")
-    p.add_argument("--req", required=True, help="実装計画の元となった要件ファイル")
-    p.add_argument("--config", help="設定ファイルのパス（既定: ./.agents/plan-review.json）")
+    p.add_argument("--design-doc", required=True, help="レビュー対象の design doc ファイル")
+    p.add_argument("--req", required=True, help="design doc の元となった要件ファイル")
+    p.add_argument("--config", help="設定ファイルのパス（既定: ./.agents/design-doc-review.json）")
     p.add_argument("--max-rounds", type=int)
     p.add_argument("--stagnation-rounds", type=int)
     p.set_defaults(func=cmd_start)
 
     p = sub.add_parser("review", help="レビューを1ラウンド実行する")
     p.add_argument("--run", required=True, help="startが出力したrunDir")
-    p.add_argument("--changes", help="前ラウンドで計画に加えた修正のサマリー")
+    p.add_argument("--changes", help="前ラウンドで design doc に加えた修正のサマリー")
     p.add_argument("--changes-file", help="修正サマリーを書いたファイル")
     p.set_defaults(func=cmd_review)
 

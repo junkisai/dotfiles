@@ -1,23 +1,23 @@
 ---
-name: codex-plan-review-loop
-description: Codex CLIで実装計画レビューの改善ループを回す。実装計画ファイルと要件ファイルを指定し、Codexにレビューさせ、指摘をトリアージして計画を修正し、再レビューする。
-argument-hint: "<実装計画ファイル> <要件ファイル>"
+name: codex-design-doc-review-loop
+description: Codex CLIで design doc レビューの改善ループを回す。design doc ファイルと要件ファイルを指定し、Codexにレビューさせ、指摘をトリアージして design doc を修正し、再レビューする。
+argument-hint: "<design doc ファイル> <要件ファイル>"
 disable-model-invocation: true
 ---
 
-# 実装計画レビューループ（レビュアー: Codex CLI）
+# design doc レビューループ（レビュアー: Codex CLI）
 
-Codex CLI（`codex exec`）をレビュアーとして、実装計画の「指摘 → 修正」の改善ループを回します。AIが作成した実装計画を、実装に入る前に独立したレビュアーで検証するためのスキルです。
+Codex CLI（`codex exec`）をレビュアーとして、design doc の「指摘 → 修正」の改善ループを回します。AIが作成した design doc を、実装に入る前に独立したレビュアーで検証するためのスキルです。
 
 プロンプト生成・Codex実行・結果解析・waiver適用・停滞検出・エビデンス検証は、すべて同梱スクリプトが行います。あなた（このスキルを実行するエージェント）の担当は次のとおりです。
 
 - 手順に沿ってスクリプトを実行する。実行中のエラー対処も自分で行う
 - レビュー報告の提示と、ユーザーのフィードバックの受け渡し（手順4・5）
-- blocking findings に基づく実装計画ファイルの修正（手順6）
+- blocking findings に基づく design doc ファイルの修正（手順6）
 
 指摘の生成はレビュアー側の役割なので、スクリプトを迂回した手動レビューには切り替えません（waiver・停滞検出・エビデンス検証が失われるため）。
 
-スクリプト: `${CLAUDE_SKILL_DIR}/scripts/plan_review.py`（python3 標準ライブラリのみで動作。`${CLAUDE_SKILL_DIR}` が展開されない環境では、このSKILL.mdがあるディレクトリに読み替える）
+スクリプト: `${CLAUDE_SKILL_DIR}/scripts/design_doc_review.py`（python3 標準ライブラリのみで動作。`${CLAUDE_SKILL_DIR}` が展開されない環境では、このSKILL.mdがあるディレクトリに読み替える）
 
 ## 前提条件
 
@@ -28,19 +28,19 @@ Codex CLI（`codex exec`）をレビュアーとして、実装計画の「指�
 
 ### 1. 対象ファイルの確認
 
-- 第1引数 = planFile（レビュー対象の実装計画ファイル）、第2引数 = promptFile（実装計画の元となった要件ファイル）: $ARGUMENTS
-- planFile が不足している場合は、ユーザーに確認する
+- 第1引数 = designDocFile（レビュー対象の design doc ファイル）、第2引数 = promptFile（design doc の元となった要件ファイル）: $ARGUMENTS
+- designDocFile が不足している場合は、ユーザーに確認する。`design-doc` スキルで書いたものは `docs/design-docs/<YYYYMMDD>_<topic>.md` にある
 - promptFile が無い場合（要件が会話でしか共有されていない場合）は、それまでの会話から要件を書き起こしてファイルを作り、promptFile として使う
-  - 保存先は planFile と同じディレクトリ（例: `<planFile と同名>-requirements.md`）。runDir は一時ディレクトリで消えるため、そこには置かない
+  - 保存先は designDocFile と同じディレクトリ（例: `<designDocFile と同名>-requirements.md`）。runDir は一時ディレクトリで消えるため、そこには置かない
   - 書く内容: 目的 / 決まっている仕様・受け入れ条件 / 制約（技術・期日・対象外）/ 参照リンク（Issue・Figma 等）/ 未決事項
-  - 会話の逐語コピーはしない。レビュアーはこれを「計画がこの要件を満たすか」の判定基準として読むため、途中で却下した案や検討の経緯は書かず、合意した事実だけを書く。不明な点は推測で埋めず未決事項に落とす
+  - 会話の逐語コピーはしない。レビュアーはこれを「design doc がこの要件を満たすか」の判定基準として読むため、途中で却下した案や検討の経緯は書かず、合意した事実だけを書く。不明な点は推測で埋めず未決事項に落とす
   - 参照リンクは必ず載せる（レビュアーがその情報源を確認したかを requiredEvidenceMet が検証するため）
   - 書き出したらユーザーに提示し、認識違いが無いか確認してから手順2へ進む
 
 ### 2. 開始
 
 ```bash
-python3 "${CLAUDE_SKILL_DIR}/scripts/plan_review.py" start --backend codex --plan "<planFile>" --req "<promptFile>"
+python3 "${CLAUDE_SKILL_DIR}/scripts/design_doc_review.py" start --backend codex --design-doc "<designDocFile>" --req "<promptFile>"
 ```
 
 出力されるJSONの `runDir` を控え、以後のコマンドで使う。
@@ -48,28 +48,28 @@ python3 "${CLAUDE_SKILL_DIR}/scripts/plan_review.py" start --backend codex --pla
 ### 3. レビュー実行
 
 ```bash
-python3 "${CLAUDE_SKILL_DIR}/scripts/plan_review.py" review --run "<runDir>"
+python3 "${CLAUDE_SKILL_DIR}/scripts/design_doc_review.py" review --run "<runDir>"
 ```
 
-2回目以降（計画修正後）は、修正サマリーのファイルを渡す。
+2回目以降（design doc 修正後）は、修正サマリーのファイルを渡す。
 
 ```bash
-python3 "${CLAUDE_SKILL_DIR}/scripts/plan_review.py" review --run "<runDir>" --changes-file "<runDir>/changes-round<N>.md"
+python3 "${CLAUDE_SKILL_DIR}/scripts/design_doc_review.py" review --run "<runDir>" --changes-file "<runDir>/changes-round<N>.md"
 ```
 
 review / feedback コマンドは1回に数分〜数十分かかることがある（スクリプト内部のタイムアウトは3600秒）。実行環境のコマンドタイムアウト上限がそれより短い場合は、バックグラウンド実行にして完了を待つ。途中でコマンドが打ち切られた場合は、同じコマンドをそのまま再実行してよい（状態はラウンド完了時にのみ保存されるため、途中終了で壊れない）。
 
 ### 4. 出力の読み方と分岐
 
-出力末尾の `===PLAN_REVIEW_STATE===` の次の行にJSONがある。その `nextAction` で分岐する。
+出力末尾の `===DESIGN_DOC_REVIEW_STATE===` の次の行にJSONがある。その `nextAction` で分岐する。
 
 | nextAction | やること |
 | --- | --- |
 | `triage` | レビュー報告を省略せずそのままユーザーに提示し、フィードバックを待つ（手順5へ） |
-| `fix_plan` | 計画を修正する（手順6へ） |
+| `fix_design_doc` | design doc を修正する（手順6へ） |
 | `done` / `stagnated` / `max_rounds` | スクリプトが出力した完了サマリーをユーザーに提示して終了 |
 
-`requiredEvidenceMet` が `false` の場合は、レビュアーが要件・計画から参照される情報源（GitHub上のIssue等・Figma）を確認しないままレビューしたということなので、このラウンドの結果をそのまま採用しない。報告内の検証警告（何が未確認か）をユーザーに伝え、レビューをやり直すか、この結果のまま続行するかを確認する。やり直す場合、ランが継続中なら feedback コマンドで「未確認の情報源を確認したうえで再レビューしてください」と伝え、終了済み（`done` 等）なら start から新しいランを作る（waiver は新しいランに引き継がれない）。なお、情報源の確認実績はレビュアーのセッションが継続している間はラウンドをまたいで引き継がれるため、2回目以降のレビューで再確認が無くてもそれだけで `false` にはならない。
+`requiredEvidenceMet` が `false` の場合は、レビュアーが要件・design doc から参照される情報源（GitHub上のIssue等・Figma）を確認しないままレビューしたということなので、このラウンドの結果をそのまま採用しない。報告内の検証警告（何が未確認か）をユーザーに伝え、レビューをやり直すか、この結果のまま続行するかを確認する。やり直す場合、ランが継続中なら feedback コマンドで「未確認の情報源を確認したうえで再レビューしてください」と伝え、終了済み（`done` 等）なら start から新しいランを作る（waiver は新しいランに引き継がれない）。なお、情報源の確認実績はレビュアーのセッションが継続している間はラウンドをまたいで引き継がれるため、2回目以降のレビューで再確認が無くてもそれだけで `false` にはならない。
 
 ### 5. トリアージ（フィードバックの反映）
 
@@ -77,20 +77,20 @@ feedback コマンドに渡すのは、指摘の取捨・調整に関するフ�
 
 - 「全て修正してください」だけの場合は、feedbackコマンドを呼ばず手順6へ進む
 - 中止の指示なら、レビュアーには送らず、その時点の指摘一覧を最終報告として終了する
-- レビュー報告への質問なら、報告と計画・要件を自分で読んで答える
+- レビュー報告への質問なら、報告と design doc ・要件を自分で読んで答える
 - 指摘の取捨・調整の指示は、ファイル（例: `<runDir>/feedback.txt`）に保存して次を実行する
 
 ```bash
-python3 "${CLAUDE_SKILL_DIR}/scripts/plan_review.py" feedback --run "<runDir>" --file "<runDir>/feedback.txt"
+python3 "${CLAUDE_SKILL_DIR}/scripts/design_doc_review.py" feedback --run "<runDir>" --file "<runDir>/feedback.txt"
 ```
 
 - 「以後〜は除外」のような指示は、スクリプトが永続waiverとして自動保存する
 - feedbackコマンドの出力も手順4と同じ形式なので、同じ分岐で処理する
 
-### 6. 計画ファイルの修正
+### 6. design doc ファイルの修正
 
-1. 各 blocking finding の指摘内容に基づき、planFile を直接修正する（promptFile の要件と矛盾しないこと。レビュアー側のCodexにはプロンプトでファイル編集を禁止しているが、念のため修正前に `git status` で想定外の変更がないか確認する）
-2. 個別の指摘への対応が終わったら、planFile 全体を見直して次の2点まで修正する（指摘箇所だけを直すと、他の箇所に残った同種の問題や、修正で生じた不整合が次のラウンドで新しい指摘になり、ループが収束しにくくなるため）:
+1. 各 blocking finding の指摘内容に基づき、designDocFile を直接修正する（promptFile の要件と矛盾しないこと。レビュアー側のCodexにはプロンプトでファイル編集を禁止しているが、念のため修正前に `git status` で想定外の変更がないか確認する）
+2. 個別の指摘への対応が終わったら、designDocFile 全体を見直して次の2点まで修正する（指摘箇所だけを直すと、他の箇所に残った同種の問題や、修正で生じた不整合が次のラウンドで新しい指摘になり、ループが収束しにくくなるため）:
    - 指摘の原因を特定し、同じ原因・同じパターンの問題が他の箇所にないか探して、あればまとめて直す
    - 全体を通読し、修正後の内容と食い違う記述（用語・前提・手順・参照関係）が残っていないか確認して直す
 3. 修正内容の要約（指摘への対応に加えて、2で追加した修正も含む）を `<runDir>/changes-round<N>.md` に書き出す
@@ -108,7 +108,7 @@ python3 "${CLAUDE_SKILL_DIR}/scripts/plan_review.py" feedback --run "<runDir>" -
 ## 設定の上書き（任意）
 
 - 一時的な上書き: `start` の引数 `--max-rounds N` / `--stagnation-rounds N` / `--config <path>`
-- プロジェクト単位の永続設定: リポジトリルートの `.agents/plan-review.json`（存在すれば自動で読み込む）
+- プロジェクト単位の永続設定: リポジトリルートの `.agents/design-doc-review.json`（存在すれば自動で読み込む）
   - 使えるキーと既定値はスクリプト冒頭の `DEFAULT_CONFIG` を参照（maxRounds, blockingCategories, blockingSeverities, perspectives, additionalInstructions, codexExtraArgs など）
   - 例: `{"maxRounds": 4, "additionalInstructions": "DB移行の後方互換性を重点的に見る"}`
 
