@@ -46,8 +46,6 @@ pnpm add -g @openai/codex gitmoji-cli wrangler
 pipx install mlx-whisper
 ```
 
-`~/.local/bin` には `awake` / `nap` も置いている。`.zshrc` の alias が
-sudo つきで参照するので、移行時に現行マシンからコピーする。
 
 ## 4. 設定ファイルを配置する
 
@@ -56,7 +54,13 @@ cd ~/Github/junkisai/dotfiles
 cp .zshrc ~/.zshrc
 cp .gitconfig ~/.gitconfig
 mkdir -p ~/.config/ghostty && cp .config/ghostty/config ~/.config/ghostty/config
+
+# pmset ラッパー。.zshrc の alias が sudo つきで ~/.local/bin/ を参照する
+mkdir -p ~/.local/bin && cp bin/awake bin/nap ~/.local/bin/
 ```
+
+`bin/awake` は蓋を閉じてもスリープさせない設定に、`bin/nap` は10分でスリープする
+既定に戻す。実行ビットごとリポジトリで管理しているので、`cp` するだけで使える。
 
 スキルのリンクは README のブートストラップ（`scripts/link-skills.sh`）で張り終えている。
 スキルを足したあとに張り直すときも、同じスクリプトを叩けばよい。
