@@ -18,12 +18,9 @@ Apple ID でサインインしてから、購入済み一覧を開いて入れ�
 
 cask が無いもの。
 
-- [ ] **Dia** — The Browser Company のブラウザ / diabrowser.com
 - [ ] **eTax** — 国税庁 e-Tax ソフト / e-tax.nta.go.jp
 - [ ] **HHKB キーマップ変更ツール** — PFU。`HHKB` フォルダと `hhkb-keymap-tool.app` の2つ
-- [ ] **Homedale** — Wi-Fi スキャナ / the-sz.com
 - [ ] **UCAM-CX80FB** — エレコム製 Web カメラのユーティリティ
-- [ ] **VTracer** — 画像を SVG に変換 / github.com/visioncortex/vtracer
 
 ## 3. brew の外から入る CLI
 
