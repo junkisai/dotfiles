@@ -12,13 +12,7 @@ Homebrew の導入・clone・`brew bundle`・Claude Code とスキルのリン�
 Apple ID でサインインしてから、購入済み一覧を開いて入れる。
 
 - [ ] Xcode
-- [ ] Portal
 - [ ] LINE
-- [ ] LINE WORKS
-- [ ] 1Password for Safari — Safari 機能拡張。1Password 本体は cask 側
-- [ ] Keynote
-- [ ] Numbers
-- [ ] Pages
 
 ## 2. 配布サイトから手動で入れる
 
