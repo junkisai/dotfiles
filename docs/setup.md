@@ -62,6 +62,7 @@ mkdir -p ~/.local/bin && cp bin/awake bin/nap ~/.local/bin/
 mkdir -p ~/.claude/hooks
 cp claude/settings.json ~/.claude/settings.json
 cp claude/hooks/*.sh ~/.claude/hooks/ && chmod +x ~/.claude/hooks/*.sh
+cp claude/statusline-command.sh ~/.claude/statusline-command.sh
 ```
 
 `claude/settings.json` を置くと skill-guard フックが有効になり、`git commit` と
@@ -69,8 +70,12 @@ cp claude/hooks/*.sh ~/.claude/hooks/ && chmod +x ~/.claude/hooks/*.sh
 Step 0 でフラグを作るので素通しされる。**配置後は Claude Code を再起動する。**
 
 `claude/hooks/` の4本は自作フック。Orca や herdr が入れるフックは各ツールが
-自分で登録し直すので、`settings.json` からは外してある。`statusLine` が参照する
-`~/.claude/statusline-command.sh` はまだリポジトリに無い（旧マシンから持ってくる）。
+自分で登録し直すので、`settings.json` からは外してある。
+
+`claude/statusline-command.sh` は `settings.json` の `statusLine` から呼ばれ、
+カレントディレクトリと git ブランチを robbyrussell 風に表示する。
+フックと合わせて `jq` に依存するが、macOS 同梱の `/usr/bin/jq` があるので
+Brewfile には入れていない。
 
 `bin/awake` は蓋を閉じてもスリープさせない設定に、`bin/nap` は10分でスリープする
 既定に戻す。実行ビットごとリポジトリで管理しているので、`cp` するだけで使える。
