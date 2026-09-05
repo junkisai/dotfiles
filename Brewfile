@@ -51,8 +51,6 @@ brew "ffmpeg"
 brew "tesseract"
 brew "pngquant"
 
-cask "font-maple-mono"
-
 # --- アプリ ---
 cask "1password"
 cask "chatgpt"
