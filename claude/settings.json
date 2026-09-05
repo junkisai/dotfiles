@@ -32,6 +32,16 @@
             "statusMessage": "worktree に env をリンク中"
           }
         ]
+      },
+      {
+        "matcher": "Bash|Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$HOME/.claude/hooks/skill-link-drift.sh\"",
+            "timeout": 5
+          }
+        ]
       }
     ]
   },

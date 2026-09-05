@@ -79,6 +79,9 @@ mkdir -p ~/raycast-scripts && cp raycast/awake.sh raycast/nap.sh ~/raycast-scrip
 
 # Claude Code 本体の設定とフック
 mkdir -p ~/.claude/hooks
+# settings.json は Claude Code 自身も追記する（権限の許可など）。
+# 既に使っているマシンで上書きすると、それらが消える。
+# 新規セットアップのときだけコピーし、既存マシンでは差分を手で取り込む。
 cp claude/settings.json ~/.claude/settings.json
 cp claude/hooks/*.sh ~/.claude/hooks/ && chmod +x ~/.claude/hooks/*.sh
 cp claude/statusline-command.sh ~/.claude/statusline-command.sh
