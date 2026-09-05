@@ -1,21 +1,21 @@
 # 新しい Mac では `brew bundle --file=Brewfile` で一括インストールする。
 # brew で入らないアプリは docs/setup.md のチェックリストを参照。
+#
+# Homebrew 6.0 から公式以外の tap は明示的に信頼しないとロードされない。
+# tap 行の `trusted:` で宣言しておけば `brew trust` を手で叩く必要はない。
+# 下の tap のうち trusted: が付いていないものは、この Brewfile からは何も入れて
+# いない（手動 install 用）。そこから入れるときは `brew trust <tap>` が要る。
 
 tap "dotenvx/brew"
 tap "hashicorp/tap"
 tap "libsql/sqld"
-tap "stablyai/orca"
-tap "steipete/tap"
-tap "supabase/tap"
+tap "stablyai/orca", trusted: { cask: "orca" }
 tap "tursodatabase/tap"
 
 # --- シェル / ターミナル ---
-brew "tmux"
 brew "zoxide"
 brew "zsh-syntax-highlighting"
-brew "neovim"
 brew "tree"
-brew "herdr"
 
 # --- 言語ランタイム管理 ---
 brew "fnm"
@@ -36,7 +36,7 @@ brew "vhs"
 # --- クラウド / インフラ ---
 brew "awscli"
 brew "cloudflared"
-brew "supabase/tap/supabase"
+brew "supabase"
 
 # --- データベース ---
 brew "mysql"
@@ -45,30 +45,26 @@ brew "postgresql@14"
 # --- AI CLI ---
 brew "gemini-cli"
 
-# --- メディア / OCR（.agents/skills が利用）---
+# --- メディア ---
 # transcribe-audio が ffmpeg/ffprobe で音声を分割する。vhs の依存でもある。
 brew "ffmpeg"
-brew "tesseract"
-brew "pngquant"
 
 # --- アプリ ---
 cask "1password"
 cask "chatgpt"
 cask "claude"
-cask "codexbar"
 cask "discord"
 cask "docker-desktop"
 cask "expo-orbit"
 cask "figma"
 cask "gcloud-cli"
 cask "google-chrome"
-cask "logi-options-plus"
-cask "orca"
+cask "logi-options+"
+# 素の "orca" は homebrew/cask の plotly orca（別物）に当たるので完全修飾名で書く。
+cask "stablyai/orca/orca"
 cask "palmier-pro"
 cask "raycast"
-cask "sequel-ace"
 cask "slack"
 cask "superwhisper"
-cask "tailscale-app"
 cask "zoom"
 cask "ankerwork"
