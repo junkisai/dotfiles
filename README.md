@@ -8,6 +8,8 @@ Mac の設定・アプリ一覧・Claude Code のスキルを1つに置いてあ
 | `docs/setup.md` | brew では入らないもののセットアップ手順 |
 | `.agents/skills/` | Claude Code のスキル。`~/.claude/skills` と `~/.agents/skills` からリンクを張る |
 | `.zshrc` `.gitconfig` `.config/` | シェルと各種ツールの設定 |
+| `bin/` | `~/.local/bin` に置く自作スクリプト（`awake` / `nap`） |
+| `claude/` | `~/.claude/` に置く Claude Code 本体の設定とフック。名前を `.claude/` にすると、このリポジトリのプロジェクト設定として読まれてしまうので分けてある |
 
 ## 新しい Mac を開いたら
 

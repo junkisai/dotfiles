@@ -1,0 +1,9 @@
+#!/bin/zsh
+
+set -e
+
+sudo -n /usr/bin/pmset -a disablesleep 0
+sudo -n /usr/bin/pmset -b sleep 10 displaysleep 10
+sudo -n /usr/bin/pmset -c sleep 10 displaysleep 10
+
+echo "蓋を閉じたら眠るゾ💤（スリープ/画面オフ: 10分）"

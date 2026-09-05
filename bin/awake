@@ -1,0 +1,8 @@
+#!/bin/zsh
+
+set -e
+
+sudo -n /usr/bin/pmset -a disablesleep 1
+sudo -n /usr/bin/pmset -a sleep 0 displaysleep 0
+
+echo "蓋を閉じても寝ない・画面も消さないゾ🔥"
