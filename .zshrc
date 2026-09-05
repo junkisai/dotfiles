@@ -8,6 +8,9 @@ export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init -)"
 
+# rbenv。本体は brew で入るので PATH 追加は要らず、shims の登録だけを行う
+eval "$(rbenv init - zsh)"
+
 # pipx が入れる CLI（mlx-whisper など）と、手で置いた awake / nap
 export PATH="$HOME/.local/bin:$PATH"
 
@@ -29,3 +32,9 @@ case ":$PATH:" in
   *) export PATH="$PNPM_HOME/bin:$PATH" ;;
 esac
 # pnpm end
+
+# zsh-syntax-highlighting は ZLE のフックを登録順に走らせるので、
+# 他のウィジェットを作る節より後、つまりこのファイルの最後に置く必要がある。
+# pnpm 節の後ろに来るのはそのため。pnpm インストーラはマーカー間しか
+# 書き換えないので、ここに置いても消えない。
+source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh

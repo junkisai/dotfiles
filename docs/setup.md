@@ -14,6 +14,18 @@ Apple ID でサインインしてから、購入済み一覧を開いて入れ�
 - [ ] Xcode
 - [ ] LINE
 
+Xcode は入れただけでは使えない。`xcode-select` は Command Line Tools を向いたままなので、
+そこを切り替えてライセンスに同意するまで `xcodebuild` が動かない。
+
+```sh
+sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+sudo xcodebuild -license accept
+sudo xcodebuild -runFirstLaunch
+
+# シミュレータのランタイムは本体と別ダウンロード。要る分だけ入れる
+xcodebuild -downloadPlatform iOS
+```
+
 ## 2. 配布サイトから手動で入れる
 
 cask が無いもの。
