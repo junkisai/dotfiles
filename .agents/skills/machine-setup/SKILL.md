@@ -114,8 +114,15 @@ brew info --cask <name> >/dev/null 2>&1 && echo あり || echo なし
 ```bash
 brew bundle check --file=Brewfile     # 節2までが済んでいるか
 ls /Applications                      # App Store と手動ぶんがどこまで入ったか
-ls ~/.claude/skills ~/.agents/skills  # 設定ファイルの配置が済んでいるか
+python3 .agents/skills/machine-setup/scripts/check-placement.py   # 手順4が済んでいるか
 ```
+
+`check-placement.py` は `docs/setup.md` の手順4を読んで、`cp` と `install` の宛先が
+実在するかを1つずつ見る。**確認したい配置先をこのスキル側に書き写さない。** 手順4に
+書けば対象に入るので、リポジトリに項目が増えても追従の必要がない。
+
+未配置は `✗`、手順4がリポジトリに無いファイルを参照していれば `?` が付く。
+`?` は移行先の問題ではなく `docs/setup.md` の記述ミスなので、直して audit 側へ回す。
 
 ## Step 2: 残りをチェックリストにする
 
