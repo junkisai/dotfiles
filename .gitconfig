@@ -1,21 +1,35 @@
 [user]
-	name = junkisai
+	name = Junki Saito
 	email = jonki.beam@gmail.com
 [core]
 	ignorecase = false
-	quotepath = false
+        quotepath = false
 [rebase]
 	autosquash = true
 [fetch]
-    prune = true
+        prune = true
 [push]
-	default = current
+        default = current
 [alias]
+	st = status
 	br = branch
 	co = checkout
-    sw = switch
-    swc = switch -c
-    logo = log --oneline
-    fix = commit --fixup
-    rebasef = rebase -i --autosquash
-    refresh = !git branch --merged | egrep -v '\\*|develop|main' | xargs git branch -d
+	logo = log --graph --oneline
+        tree= log --oneline
+        sw = switch
+        swc = switch -c
+        rebasef = rebase -i --autosquash
+		refresh = "!f() { current=$(git symbolic-ref --quiet --short HEAD) || exit 1; for b in $(git for-each-ref --format='%(refname:short)' refs/heads); do case \"$b\" in \"$current\"|main|master|develop) continue ;; esac; if git merge-base --is-ancestor \"$b\" HEAD; then git branch -d \"$b\"; elif [ -z \"$(git cherry HEAD \"$b\" | grep '^+')\" ]; then git branch -D \"$b\"; fi; done; }; f"
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+[pull]
+	rebase = true
+[credential "https://github.com"]
+	helper = 
+	helper = !/opt/homebrew/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper = 
+	helper = !/opt/homebrew/bin/gh auth git-credential
