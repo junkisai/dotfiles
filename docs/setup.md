@@ -82,7 +82,15 @@ mkdir -p ~/.claude/hooks
 cp claude/settings.json ~/.claude/settings.json
 cp claude/hooks/*.sh ~/.claude/hooks/ && chmod +x ~/.claude/hooks/*.sh
 cp claude/statusline-command.sh ~/.claude/statusline-command.sh
+
+# 配置できたかを確かめる
+python3 .agents/skills/machine-setup/scripts/check-placement.py
 ```
+
+最後の `check-placement.py` は、**このコードブロックの `cp` と `install` の宛先を読んで
+存在を確かめる。** 特に `sudo install` は失敗しても後続の症状が「`awake` が動かない」
+としてしか出ないので、置いたつもりで置けていない状態に気づけない。手順を足したときも、
+このブロックに書けば確認の対象に入る。
 
 `claude/settings.json` を置くと skill-guard フックが有効になり、`git commit` と
 `gh pr create` の直接実行がブロックされる。`commit` / `pr` / `pr-only` スキルは
