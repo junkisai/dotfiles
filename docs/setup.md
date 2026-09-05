@@ -67,8 +67,15 @@ cp .zshrc ~/.zshrc
 cp .gitconfig ~/.gitconfig
 mkdir -p ~/.config/ghostty && cp .config/ghostty/config ~/.config/ghostty/config
 
-# pmset ラッパー。.zshrc の alias が sudo つきで ~/.local/bin/ を参照する
+# pmset ラッパー。~/.local/bin は .zshrc で PATH に入れてある
 mkdir -p ~/.local/bin && cp bin/awake bin/nap ~/.local/bin/
+
+# awake / nap が叩く pmset だけをパスワードなしで許可する
+sudo install -m 0440 -o root -g wheel etc/sudoers.d/pmset /etc/sudoers.d/pmset
+sudo visudo -cf /etc/sudoers.d/pmset
+
+# Raycast から awake / nap を呼ぶスクリプト
+mkdir -p ~/raycast-scripts && cp raycast/awake.sh raycast/nap.sh ~/raycast-scripts/
 
 # Claude Code 本体の設定とフック
 mkdir -p ~/.claude/hooks
@@ -91,6 +98,22 @@ Brewfile には入れていない。
 
 `bin/awake` は蓋を閉じてもスリープさせない設定に、`bin/nap` は10分でスリープする
 既定に戻す。実行ビットごとリポジトリで管理しているので、`cp` するだけで使える。
+
+どちらも中で `sudo -n pmset` を叩く。`-n` はパスワードが要るなら聞かずに失敗する指定で、
+TTY を持たない Raycast から呼んでも固まらないようにしてある。パスワードなしで通すのが
+`etc/sudoers.d/pmset` で、`bin/awake` `bin/nap` が発行する5つの pmset 呼び出しだけを
+引数まで固定して許可する。**`bin/` 側のコマンドを1文字でも変えたらこちらも直す。**
+sudoers の引数マッチは完全一致なので、ずれると黙ってパスワードを要求して失敗する。
+
+`/etc/sudoers.d/` へはコピーで入れる。**シンボリックリンクにしてはいけない。**
+リンク先がこのリポジトリ（一般ユーザーで書き換えられる）にあると、そこへ 1 行足すだけで
+root が取れてしまう。`visudo -cf` も飛ばさない。sudoers に構文エラーが入ると sudo 自体が
+使えなくなる。
+
+`raycast/*.sh` は Raycast の Script Commands。先頭のコメントが Raycast 用のメタデータで、
+中身は `~/.local/bin/` のラッパーを呼ぶだけ。配置後に Raycast の
+Extensions → Script Commands → Add Directories で `~/raycast-scripts` を登録すると
+`Awake` / `Nap` として実行できるようになる。
 
 スキルのリンクは README のブートストラップ（`scripts/link-skills.sh`）で張り終えている。
 スキルを足したあとに張り直すときも、同じスクリプトを叩けばよい。
