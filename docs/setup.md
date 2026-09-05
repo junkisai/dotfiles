@@ -1,26 +1,12 @@
 # 新しい Mac のセットアップ
 
-上から順に実行する。`Brewfile` が自動化できる範囲を持ち、この文書は
-それ以外（App Store・手動ダウンロード・brew の外で入るツール）を持つ。
+Homebrew の導入・clone・`brew bundle` は [README](../README.md) にある。それが済んでいる前提で、
+ここは brew では入らないもの（App Store・手動ダウンロード・brew の外で入るツール）を
+上から順に扱う。
 
-## 1. 前提
+`/machine-setup install` で、この手順に伴走させられる。
 
-```sh
-xcode-select --install
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-```
-
-## 2. brew でまとめて入れる
-
-```sh
-git clone git@github.com:junkisai/dotfiles.git ~/Github/junkisai/dotfiles
-cd ~/Github/junkisai/dotfiles
-brew bundle --file=Brewfile
-```
-
-中身は `Brewfile` を参照。formula・cask ともにここに集約している。
-
-## 3. App Store から入れる
+## 1. App Store から入れる
 
 Apple ID でサインインしてから、購入済み一覧を開いて入れる。
 
@@ -33,7 +19,7 @@ Apple ID でサインインしてから、購入済み一覧を開いて入れ�
 - [ ] Numbers
 - [ ] Pages
 
-## 4. 配布サイトから手動で入れる
+## 2. 配布サイトから手動で入れる
 
 cask が無いもの。
 
@@ -44,7 +30,7 @@ cask が無いもの。
 - [ ] **UCAM-CX80FB** — エレコム製 Web カメラのユーティリティ
 - [ ] **VTracer** — 画像を SVG に変換 / github.com/visioncortex/vtracer
 
-## 5. brew の外から入る CLI
+## 3. brew の外から入る CLI
 
 ```sh
 # oh-my-zsh と zsh-autosuggestions（.zshrc の plugins が参照）
@@ -65,7 +51,7 @@ pipx install mlx-whisper
 `~/.local/bin` には `awake` / `nap` も置いている。`.zshrc` の alias が
 sudo つきで参照するので、移行時に現行マシンからコピーする。
 
-## 6. 設定ファイルを配置する
+## 4. 設定ファイルを配置する
 
 スキルはリポジトリを実体にして、`~/.claude/skills` と `~/.agents/skills` から
 1つずつシンボリックリンクを張る。
