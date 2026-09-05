@@ -33,11 +33,20 @@ cask が無いもの。
 
 ## 3. brew の外から入る CLI
 
+上から順に叩く。**`.zshrc` の配置（手順4）は必ずこの後に行う。**
+oh-my-zsh と pnpm のインストーラはどちらも `~/.zshrc` を書き換えるので、
+先に配置すると上書きされる。
+
 ```sh
 # oh-my-zsh と zsh-autosuggestions（.zshrc の plugins が参照）
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+# KEEP_ZSHRC=yes を付けないと既存の .zshrc を退避して雛形で置き換える
+RUNZSH=no CHSH=no KEEP_ZSHRC=yes \
+  sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 git clone https://github.com/zsh-users/zsh-autosuggestions \
   ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+
+# pnpm 本体（公式インストーラ。~/Library/pnpm に入り、.zshrc の PNPM_HOME と揃う）
+curl -fsSL https://get.pnpm.io/install.sh | SHELL=/bin/zsh sh -
 
 # pnpm グローバル
 pnpm add -g @openai/codex gitmoji-cli wrangler
