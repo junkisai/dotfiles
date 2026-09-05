@@ -39,9 +39,10 @@ Brewfile は書いた日のスナップショットでしかない。アプリ�
 - `/machine-setup install` … 新マシンのセットアップ
 - 引数なし … どちらか確認してから進める
 
-**このスキルはブートストラップを担当しない。** Homebrew の導入・clone・`brew bundle` は
-スキルが動く前提そのものなので、README の手順として置いてある。install モードが引き継ぐのは
-その後からになる。
+**このスキルはブートストラップを担当しない。** Homebrew の導入・clone・`brew bundle`・
+Claude Code の導入・`scripts/link-skills.sh` によるスキルのリンクは、スキルが動く前提そのもの
+なので、README の手順として置いてある。clone しただけではリンクが無く、このスキル自体が
+呼べない。install モードが引き継ぐのはその後からになる。
 
 ---
 

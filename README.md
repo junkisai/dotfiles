@@ -25,9 +25,13 @@ cd ~/Github/junkisai/dotfiles
 
 # 3. brew で入るものを一括インストール
 brew bundle --file=Brewfile
+
+# 4. Claude Code とスキルのリンク
+curl -fsSL https://claude.ai/install.sh | bash
+bash scripts/link-skills.sh
 ```
 
-ここまでで Homebrew 管理下のツールとアプリが揃う。
+ここまでで Homebrew 管理下のツールとアプリが揃い、Claude Code からスキルが呼べるようになる。
 
 `Refusing to load formula ... from untrusted tap` で全部まとめて失敗したときは、
 Homebrew 6.0 の tap 信頼チェックに引っかかっている。1件のエラーでバッチ全体が落ちるので
@@ -38,7 +42,8 @@ Brewfile の tap 行に `trusted:` を足す（`brew trust <tap>` でもよい�
 続きは **[docs/setup.md](docs/setup.md)** にある。App Store・配布サイトからのインストール、
 brew の外から入る CLI、設定ファイルの配置が残っている。
 
-Claude Code を入れたあとなら、`/machine-setup install` で残りの手順に伴走させられる。
+Claude Code を起動し直せばスキル一覧に載るので、そこから先は `/machine-setup install` で
+残りの手順に伴走させられる。
 
 ## アプリの出入りを反映する
 

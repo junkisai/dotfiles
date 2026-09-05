@@ -1,6 +1,7 @@
 # 新しい Mac のセットアップ
 
-Homebrew の導入・clone・`brew bundle` は [README](../README.md) にある。それが済んでいる前提で、
+Homebrew の導入・clone・`brew bundle`・Claude Code とスキルのリンクは
+[README](../README.md) にある。それが済んでいる前提で、
 ここは brew では入らないもの（App Store・手動ダウンロード・brew の外で入るツール）を
 上から順に扱う。
 
@@ -38,9 +39,6 @@ sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/too
 git clone https://github.com/zsh-users/zsh-autosuggestions \
   ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
 
-# Claude Code（~/.local/bin/claude に入る）
-curl -fsSL https://claude.ai/install.sh | bash
-
 # pnpm グローバル
 pnpm add -g @openai/codex gitmoji-cli wrangler
 
@@ -53,22 +51,15 @@ sudo つきで参照するので、移行時に現行マシンからコピーす
 
 ## 4. 設定ファイルを配置する
 
-スキルはリポジトリを実体にして、`~/.claude/skills` と `~/.agents/skills` から
-1つずつシンボリックリンクを張る。
-
 ```sh
 cd ~/Github/junkisai/dotfiles
 cp .zshrc ~/.zshrc
 cp .gitconfig ~/.gitconfig
 mkdir -p ~/.config/ghostty && cp .config/ghostty/config ~/.config/ghostty/config
-
-mkdir -p ~/.claude/skills ~/.agents/skills
-for s in .agents/skills/*/; do
-  name=$(basename "$s")
-  ln -sfn "$PWD/.agents/skills/$name" ~/.claude/skills/"$name"
-  ln -sfn "$PWD/.agents/skills/$name" ~/.agents/skills/"$name"
-done
 ```
+
+スキルのリンクは README のブートストラップ（`scripts/link-skills.sh`）で張り終えている。
+スキルを足したあとに張り直すときも、同じスクリプトを叩けばよい。
 
 `.config/ghostty/config` は配色とフォント設定の控えとして置いてある。
 Ghostty 本体は入れないので Brewfile に cask は無い。
