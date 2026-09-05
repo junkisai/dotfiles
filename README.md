@@ -29,6 +29,12 @@ brew bundle --file=Brewfile
 
 ここまでで Homebrew 管理下のツールとアプリが揃う。
 
+`Refusing to load formula ... from untrusted tap` で全部まとめて失敗したときは、
+Homebrew 6.0 の tap 信頼チェックに引っかかっている。1件のエラーでバッチ全体が落ちるので
+「全部 failed」に見えるが、原因はエラー行に出ている tap ひとつだけ。
+その tap を Brewfile で使っていないなら `brew untap <tap>`、使っているなら
+Brewfile の tap 行に `trusted:` を足す（`brew trust <tap>` でもよい）。
+
 続きは **[docs/setup.md](docs/setup.md)** にある。App Store・配布サイトからのインストール、
 brew の外から入る CLI、設定ファイルの配置が残っている。
 
