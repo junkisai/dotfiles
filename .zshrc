@@ -11,16 +11,12 @@ eval "$(pyenv init -)"
 # rbenv。本体は brew で入るので PATH 追加は要らず、shims の登録だけを行う
 eval "$(rbenv init - zsh)"
 
-# pipx が入れる CLI（mlx-whisper など）と、手で置いた awake / nap
+# pipx が入れる CLI（mlx-whisper など）と、awake / nap
 export PATH="$HOME/.local/bin:$PATH"
 
 # fnm (Node.js version manager)
 # ~/.local/bin より後に置き、そこに node が入っていても fnm を優先させる
 eval "$(fnm env --use-on-cd)"
-
-# alias
-alias awake='sudo ~/.local/bin/awake'
-alias nap='sudo ~/.local/bin/nap'
 
 # 以下は pnpm 公式インストーラが管理する節。`# pnpm` から `# pnpm end` までを
 # 丸ごと書き換えるので、この2行の間に他の設定を挟まないこと。

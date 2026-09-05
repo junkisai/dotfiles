@@ -1,0 +1,7 @@
+Cmnd_Alias PMSET_SLEEP = /usr/bin/pmset -a disablesleep 1, \
+                         /usr/bin/pmset -a sleep 0 displaysleep 0, \
+                         /usr/bin/pmset -a disablesleep 0, \
+                         /usr/bin/pmset -b sleep 10 displaysleep 10, \
+                         /usr/bin/pmset -c sleep 10 displaysleep 10
+
+junkisai ALL=(root) NOPASSWD: PMSET_SLEEP
