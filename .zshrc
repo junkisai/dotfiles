@@ -14,7 +14,7 @@ export PATH="$PNPM_HOME:$PATH"
 export PATH="$HOME/.local/bin:$PATH"
 
 # fnm (Node.js version manager)
-# ~/.local/bin（hermes-agent 同梱の node）より後に置き、fnm を PATH で優先させる
+# ~/.local/bin より後に置き、そこに node が入っていても fnm を優先させる
 eval "$(fnm env --use-on-cd)"
 
 # alias
