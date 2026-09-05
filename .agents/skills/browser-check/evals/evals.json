@@ -18,6 +18,24 @@
       "prompt": "/browser-check local エラー時の表示を作り込んで確認したい",
       "expected_output": "自分でアプリを起動（起動コマンドは実行時確認）し認証バイパス前提で、エラー状態を作って画面の振る舞いを観測する",
       "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "商品の一覧画面でロック中は編集ボタンを押せないようにしたので、ローカルで動作確認して動画をとっておいて。PRに貼りたい",
+      "expected_output": "観測だけで終わらせず、収録して注釈付き動画まで仕上げる。references/recording.md を読み、mark() を呼んだ項目だけを停止点にする。拡大範囲はセレクタで指定し座標を手入力しない。出力先は ~/Downloads/browser-check/<日付-対象>/ で、動画は gh から添付できないため場所を伝えて手で貼ってもらうよう案内する。",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "/browser-check staging --record デプロイした変更をstagingで確認して動画で残して",
+      "expected_output": "staging では CDP で既存 Chrome に attach し、Playwright の recordVideo は使えないため screencapture 方式になることを踏まえる。画面収録の許可がない場合は黙って静止画に落とさず、そこで止めて許可の取り方を案内し、静止画のみで続けるかを利用者に聞く。browser.close() を呼ばず、最後のタブも閉じない。実データのマスクにも触れる。",
+      "files": []
+    },
+    {
+      "id": 6,
+      "prompt": "/browser-check compare 保存エラーの表示を直したので修正前後を並べた動画がほしい",
+      "expected_output": "自分で git のブランチ切り替えや worktree 操作を始めず、「修正前にするコマンド」「修正後にするコマンド」を利用者に聞いてから進める。同じ観測スクリプトを2回走らせ、前半 before・後半 after として1本にまとめる。",
+      "files": []
     }
   ]
 }
