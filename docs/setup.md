@@ -43,7 +43,6 @@ cask が無いもの。
 - [ ] **Homedale** — Wi-Fi スキャナ / the-sz.com
 - [ ] **UCAM-CX80FB** — エレコム製 Web カメラのユーティリティ
 - [ ] **VTracer** — 画像を SVG に変換 / github.com/visioncortex/vtracer
-- [ ] **Karui** — 個人開発アプリ。配布元は移行前に現行マシンで控えておく
 
 ## 5. brew の外から入る CLI
 
@@ -85,10 +84,5 @@ for s in .agents/skills/*/; do
 done
 ```
 
-## 7. 移行前に現行マシンで確認すること
-
-- [ ] **Ghostty** — `.config/ghostty/config` を管理しているが本体が入っていない。
-      移行先で使うなら `cask "ghostty"` を Brewfile に足す
-- [ ] **Karui の配布元 URL** — 上記のとおり控えておく
-- [ ] **Brewfile 末尾のコメントアウト群** — 現行 ffmpeg が参照しない旧依存。
-      必要なものがあれば戻す
+`.config/ghostty/config` は配色とフォント設定の控えとして置いてある。
+Ghostty 本体は入れないので Brewfile に cask は無い。
