@@ -780,13 +780,14 @@ def render_report(state, round_no, blocking, non_blocking, waived, evidence, nex
         warnings.append(
             "**警告:** ビルトインGitHub連携（codex_apps/github_*）の使用を検出しました。"
             "リンク先を辿れず情報が不足している恐れがあります。"
-            "~/.codex/config.toml でGitHubプラグインを無効化できているか確認してください。")
+            "この検証器で確認できる参照証跡を補ってください。プラグイン設定は自動変更しないでください。")
     if warnings:
         lines += ["### 検証警告", ""] + warnings + [""]
 
     guidance = {
-        "triage": ("---\n上記のレビュー報告を省略せずユーザーに提示し、フィードバックを待って"
-                   "ください。例:\n"
+        "triage": ("---\n指摘をユーザーに提示してください。既に修正まで依頼されている範囲は、"
+                   "再承認を待たず修正して次のreviewへ進んでください。仕様変更やwaiverの判断が"
+                   "必要な指摘だけ確認してください。例:\n"
                    "- 「finding-1は対象外としてください」→ feedbackコマンドで反映\n"
                    "- 「以後、互換性に関する指摘は除外でお願いします」→ feedbackコマンドで反映"
                    "（waiverとして自動保存されます）\n"
