@@ -1,0 +1,7 @@
+# 複数の Mac で共有する Codex の基本設定。
+# 端末固有の設定を含む ~/.codex/config.toml 全体はコピーしない。
+model = "gpt-6-astra"
+model_reasoning_effort = "high"
+sandbox_mode = "workspace-write"
+approval_policy = "on-request"
+approvals_reviewer = "auto_review"
