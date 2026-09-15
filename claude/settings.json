@@ -23,17 +23,6 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "EnterWorktree|Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"$HOME/.claude/hooks/link-worktree-env.sh\"",
-            "timeout": 15,
-            "statusMessage": "worktree に env をリンク中"
-          }
-        ]
-      },
-      {
         "matcher": "Bash|Write|Edit",
         "hooks": [
           {
