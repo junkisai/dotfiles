@@ -1,6 +1,6 @@
 # dotfiles
 
-Mac の設定・アプリ一覧・Claude Code のスキルを1つに置いてある。
+Mac の設定・アプリ一覧・Claude Code / Codex の設定とスキルを1つに置いてある。
 
 | 場所 | 中身 |
 | --- | --- |
@@ -12,6 +12,7 @@ Mac の設定・アプリ一覧・Claude Code のスキルを1つに置いてあ
 | `raycast/` | `~/raycast-scripts` に置く Raycast の Script Commands。`bin/` のスクリプトを呼ぶ |
 | `etc/sudoers.d/` | `/etc/sudoers.d/` に**コピーで**置く sudo 設定。`awake` / `nap` が叩く pmset だけをパスワードなしで通す |
 | `claude/` | `~/.claude/` に置く Claude Code 本体の設定とフック。名前を `.claude/` にすると、このリポジトリのプロジェクト設定として読まれてしまうので分けてある |
+| `codex/config.toml` | `~/.codex/config.toml` に取り込む Codex の共通設定（モデル・推論強度・自動承認レビュー） |
 
 ## 新しい Mac を開いたら
 
