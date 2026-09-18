@@ -1,0 +1,23 @@
+{
+  "skill_name": "branch-name",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Orca の worktree（ブランチ名は coffinfish、まだ push していない）で README の誤字を直した。ブランチ名を規則に合わせて",
+      "expected_output": "差分を見て、ブランチが docs/fix-readme-typo のような `<種類>/<動詞から始まる英語のケバブケース>` へ git branch -m で付け直される。報告に旧名と新名が含まれる。",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "ログイン画面にパスワードの表示切り替えを付けたい。まずブランチを切って",
+      "expected_output": "差分がまだ無いので依頼の内容から、feature/add-password-visibility-toggle のような feature 種類の名前でブランチが作られる。",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "junkisai/fix-ai-chat-dark はもう push して PR も出してある。このブランチ名、規則に合ってる？",
+      "expected_output": "`<種類>/<内容>` の規則に合わないと答える。push 済みなので自動では付け直さず、リモートの古いブランチと PR をどう扱うかを確かめる。",
+      "files": []
+    }
+  ]
+}

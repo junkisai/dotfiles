@@ -18,12 +18,6 @@
       "prompt": "新しい commit スキルを追加したのでコミットお願い",
       "expected_output": "✨ 絵文字付きの日本語コミットメッセージでコミットが作成される。新機能追加なので ✨ 絵文字が使われることが期待される。コミット後に git log で確認される。",
       "files": []
-    },
-    {
-      "id": 4,
-      "prompt": "Orca の worktree（ブランチ名は coffinfish、まだ push していない）で README の誤字を直したのでコミットして",
-      "expected_output": "コミットの前にブランチが docs/fix-readme-typo のような `<種類>/<動詞から始まる英語のケバブケース>` へ git branch -m で付け直される。📝 絵文字付きの日本語メッセージでコミットされ、報告に旧名と新名が含まれる。",
-      "files": []
     }
   ]
 }
