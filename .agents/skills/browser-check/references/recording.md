@@ -1,6 +1,6 @@
 # 証跡を動画で残す
 
-`--record` が指定されたときに読む。観測そのもののやり方は SKILL.md 本体にある。
+`--record` が指定されたときに読む。観測そのもののやり方は SKILL.md と各 reference にある。
 
 形式の指定がなければ、時間で変わるものには動画、静的な状態には静止画を選ぶ。動画を指定された場合はその成果物を優先する。
 「保存を押してから15分なにも起きない」「20秒経つと案内が変わる」は静止画では伝わらない。
@@ -8,7 +8,8 @@
 ## 目次
 
 - [全体の流れ](#全体の流れ)
-- [収録の2方式](#収録の2方式)
+- [収録の3方式](#収録の3方式)
+- [mark](#mark)
 - [beats.json](#beatsjson)
 - [編集](#編集)
 - [compare](#compare)
@@ -16,52 +17,68 @@
 
 ## 全体の流れ
 
+```sh
+OUT=~/Downloads/browser-check/<日付-対象>
+REC="node <skill>/lib/recorder.js"
+
+$REC start --target browser --page <確認用タブの browserPageId> --out $OUT   # 収録を始める
+# ... Orca の CLI で観測する。見せどころで mark を打つ ...
+$REC mark edit-open --out $OUT --label "保存ボタンが出る" --focus 'button:has-text("保存")'
+$REC stop --out $OUT                        # run.mp4 + beats.json + 静止画
 ```
-1. 観測スクリプトを書く（lib/recorder.js を使う）
-2. 実行 → run.mp4 + beats.json + 静止画
-3. 作業ディレクトリに template/ をコピーして npm install
-4. story.ts に見出しを書く
-5. npx remotion render Check out.mp4
+
+その後、`template/` を作業ディレクトリにコピーして編集する。
+
+```sh
+cp -R <skill>/template ./video && cd video && npm install
+cp $OUT/beats.json src/ && cp $OUT/run.mp4 $OUT/*.png public/
+# src/story.ts に見出しを書く
+npx remotion render Check out.mp4
 ```
 
-書くのは **観測スクリプト**と **story.ts** の2つだけ。フレーム番号や座標は触らない。
+書くのは **観測（と mark）**と **story.ts** の2つだけ。フレーム番号や座標は触らない。
 
-出力先は `~/Downloads/browser-check/<日付-対象>/`。リポジトリを汚さず、PR に添付しやすい。
+出力先は `~/Downloads/browser-check/<日付-対象>/`。リポジトリを汚さず、PR に添付しやすい。動画は `gh` から添付できないので、場所を伝えて手で貼ってもらう。
 
-## 収録の2方式
+## 収録の3方式
 
-| モード | 方式 | 使う場面 |
+| target | 撮り方 | 前提 |
 |---|---|---|
-| local | Playwright の `recordVideo` | ローカルで状態を作り込める |
-| attach | `screencapture` でウィンドウ領域を録画 | staging / 本番のログイン済みセッション |
+| browser | `screencapture -R` で Orca の browser ペインの領域だけを録画 | Orca でそのタブが画面に見えている |
+| ios | `xcrun simctl io recordVideo` | シミュレータが起動している。録画に Orca の attach は要らない |
+| android | `adb shell screenrecord`（1本180秒まで） | adb から見える端末がある。**この Mac では実測していない** |
 
-`lib/recorder.js` の `createRecorder({ mode })` が両方を吸収する。呼ぶ側のコードは同じ。
+`recorder.js` が3方式の差を吸収する。観測は Orca の CLI で行い、`mark` を打つ呼び出しだけが共通。
 
-```js
-const { createRecorder } = require("<skill>/lib/recorder");
+### browser の前提と仕組み
 
-const rec = await createRecorder({
-  mode: "local",
-  outDir: process.env.OUT_DIR,
-  mask: [".customer-name", ".amount"],   // staging で実データを隠す
-});
+Orca の browser には画面を録る手段がないので、画面側を外から録る。そのためペインが画面のどこにあるかが要る。
 
-const page = rec.page;
-await page.goto("http://localhost:3000/items");
-await page.click('button:has-text("編集")');
-await rec.mark("edit-open", { focus: 'button:has-text("保存")', label: "保存ボタンが出る" });
-await rec.finish();
-```
+- `start` は、指定したタブをペイン全面が単色のページ（`lib/calibrate.html`）に切り替え、Orca ウィンドウを撮って矩形を探す。同時に「そのタブが実際に画面に見えているか」の確認になる。**見えていなければ `start` は失敗する。**
+- 失敗したら、録画できないことと理由（このワークスペースを前面に出す必要がある）を伝える。ユーザーが表示してくれれば再実行する。静止画への切り替えは利用者に確認する。動画を頼まれたのに静止画が出てくるのは、意図しない結果になる。
+- 録るのはペインの領域だけで、Orca のサイドバーや他のワークスペースは映らない。位置の割り出しに撮る Orca ウィンドウ全体の画像は、解析後すぐ消す。
+- `start` はタブの中身をマゼンタのページに置き換える。**確認専用のタブで実行し、`start` の後に対象 URL へ `goto` する。**
+- 収録中は、ペインを隠さない・ウィンドウを動かす/リサイズしない・ワークスペースを切り替えない。ユーザーにも伝える。
+- `screencapture` は macOS の画面収録の許可が要る。許可がないとダイアログが出て止まる。**録画ができないことと権限の設定方法を伝え、録画以外に実施できる観測は進める。**
 
-### なぜ staging は別方式なのか
+### ios / android
 
-CDP で起動済み Chrome に繋ぐと、**ログイン状態を持つのは既存 context だけ**で、そこでは
-`page.video()` が `null` になる。録画できる `newContext` は Cookie を共有しない（実測で確認）。
-両立しないので、画面側を外から録るしかない。
+端末を `--device` で指定する（省略時は起動中が1台だけならそれを使う）。`orca emulator attach` が失敗する環境でも、`simctl` の録画は動く（[エミュレータ](orca-emulator.md)）。ただし、その状態では画面を操作できないので、録るのは表示の変化に限られる。
 
-`screencapture` は macOS の画面収録許可が要る。許可がないとダイアログが出て止まる。
-**録画ができないことと権限の設定方法を伝え、録画以外に実施できる観測は進める。静止画への成果物変更は利用者に確認する。** 動画を頼まれたのに
-静止画が出てくるのは、意図しない結果になる。
+縦長の映像は、横長キャンバス（1440x810）の中央に載せて出力する。template の注釈カードは固定幅で、縦長のまま渡すと収まらないため。注釈カードがスマホ画面に重なるときは、`story.ts` の `cardBottom: true` などで避ける。
+
+## mark
+
+見せどころで打つ。ここで静止画も撮り、`beats.json` に記録する。`mark` を打った項目だけが、動画の停止点になる。
+
+| 対象 | 拡大範囲の指定 |
+|---|---|
+| browser | `--focus '<CSS セレクタ>'`。`getBoundingClientRect()` で実座標に解決する |
+| ios / android | `--focus-rect x,y,w,h`。`orca emulator ax` の `frame`（0..1 に正規化）をそのまま渡す |
+
+どちらも**目測で座標を書かない**。ここを手で入れると必ずずれる。
+
+実データを隠すときは、`start` に `--mask '<CSS セレクタ>'` を渡す（browser のみ）。静止画は確実に塗りつぶされ、早送り区間は `beats.json` の矩形を編集側で被せる。
 
 ## beats.json
 
@@ -71,8 +88,8 @@ CDP で起動済み Chrome に繋ぐと、**ログイン状態を持つのは既
 {
   "clip": "run.mp4",
   "fps": 30,
-  "size": { "width": 1440, "height": 810 },
-  "mode": "local",
+  "size": { "width": 1295, "height": 939 },
+  "mode": "browser",
   "beats": [
     {
       "name": "edit-open",
@@ -86,16 +103,13 @@ CDP で起動済み Chrome に繋ぐと、**ログイン状態を持つのは既
 }
 ```
 
-`focus` はセレクタから `boundingBox()` で解決した実座標。目測で座標を書かない。
-ここを手で入れると必ずずれる。
+`mode` は `browser` / `ios` / `android`、compare では `<mode>-compare`。`size` は browser がペインの論理サイズ、スマホは 1440x810。
 
-**停止表示には動画のフレームではなく静止画（`still`）を使う。** 2倍以上に拡大すると
-動画のフレームは甘くなるが、`page.screenshot()` の静止画なら劣化しない。
+**停止表示には動画のフレームではなく静止画（`still`）を使う。** 2倍以上に拡大すると動画のフレームは甘くなるが、`orca screenshot` などの静止画なら劣化しない。
 
 ## 編集
 
-`story.ts` に場面ごとの見出しを書く。フレーム位置は `beats.json` から自動で拾い、
-早送り区間は「前の beat から今の beat まで」が切り出される。
+`story.ts` に場面ごとの見出しを書く。フレーム位置は `beats.json` から自動で拾い、早送り区間は「前の beat から今の beat まで」が切り出される。
 
 ```ts
 export const STORY: Story = {
@@ -132,38 +146,42 @@ before: cd ../worktrees/main && npm start
 after:  cd ../worktrees/fix-123 && npm start
 ```
 
-中身が git でも docker でもデプロイ待ちでも構わない。切り替え方法はプロジェクトごとに
-違うので、スキルが握ると壊れる。同じ観測スクリプトを2回走らせ、2つの `beats.json` を
-前半 before・後半 after として並べる。
+中身が git でも docker でもデプロイ待ちでも構わない。切り替え方法はプロジェクトごとに違うので、スキルが握ると壊れる。
+同じ観測を2回行い、それぞれ別の出力先に収録して、`merge` で前半 before・後半 after の1本にまとめる。
+
+```sh
+$REC start --target browser --out $OUT/before   # 修正前を観測して stop
+$REC start --target browser --out $OUT/after    # 修正後を観測して stop
+$REC merge --before $OUT/before --after $OUT/after --out $OUT
+```
+
+`story.ts` の beat 名は `before-<名前>` / `after-<名前>` になる。before と after は、対象・サイズが同じでなければ `merge` が拒否する（browser はペインの大きさが変わらないよう、ウィンドウをリサイズしない）。
 
 ## 実測で分かった落とし穴
 
-### CDP 接続
+### Orca browser の画面位置
 
-- **`browser.close()` を呼ばない。** 接続を切るだけでなく Chrome ごと終了する。
-  利用者のブラウザを閉じてしまう
-- **最後のタブを閉じない。** タブが 0 になると以後 `connectOverCDP` が
-  `Browser context management is not supported` で失敗する。復旧には手でタブを開く必要がある
-- `recordVideo` は既存 context では効かない（前述）
+- **ページ内の `window.screenX` / `outerWidth` は、ペインではなく Orca ウィンドウ全体を返す。** ペインの画面位置は取れない。`innerWidth` / `innerHeight` だけがペインのサイズを表す。だから `start` は単色ページで位置を割り出す
+- **ペインが見えているのは、そのワークスペースがユーザーの画面に出ているときだけ。** 別のワークスペースを見ているときに Orca ウィンドウを撮ると、他プロジェクトのサイドバーやエージェントの会話が映る。位置の割り出しに使った画像は必ず消し、録るのはペイン領域に限る
+- `orca screenshot` はペインを2倍解像度で返す。静止画はこれで足りる
 
 ### screencapture
 
-- 起動から実際の録画開始まで **約570ms の遅れ**がある。実測 571ms / 574ms と安定していて、
-  時間が経っても累積しない。`recorder.js` が固定値で差し引いている
-- 出力は **Retina で指定領域の2倍解像度**になる。1200x800 を指定すると 2400x1600 で出る。
-  `recorder.js` が mp4 変換時に論理サイズへ戻している
-- 領域指定は `-R<x,y,w,h>`。画面全体ではなくウィンドウ領域だけを録るのは、
-  デスクトップの他アプリや通知を写さないため
+- 起動から実際の録画開始まで **約570msの遅れ**がある。実測 571ms / 574ms と安定していて、時間が経っても累積しない。`recorder.js` が固定値で差し引いている
+- 出力は **Retina で指定領域の2倍解像度、60fps** になる。`recorder.js` が mp4 変換時に論理サイズ・30fps へ戻している
+- 領域指定は `-R<x,y,w,h>`。ウィンドウ指定（`-l`）は影の余白が付いて寸法がずれる（3840x2100 のウィンドウが 3976x2236 で出る）。画面全体ではなく領域だけを録るのは、デスクトップの他アプリや通知を写さないため
+
+### simctl
+
+- **`recordVideo` は画面が変化したときだけフレームを書く。** 静止した画面を3秒録っても、映像は 0.07 秒ぶんしか出ない。`recorder.js` は実時間との差を最後のフレームの延長で埋めている。フレーム数から尺を推測しない
+- 録画の開始は stderr の `Recording started` で分かる。`recorder.js` はその時刻を t0 にしている
 
 ### 撮れないもの
 
-- **ネイティブダイアログ**（`beforeunload` の「このサイトを離れますか？」など）は
-  ブラウザ自身が出すもので、Playwright の録画には写らない。`screencapture` でのみ撮れる。
-  必要なら `lib/capture-window.sh` で手動収録し、静止画として編集に差し込む
-- 偽のダイアログ画像を作らない。撮れないものは撮れないと書き、実測値を代わりに出す
+- 画面に出ていないものは撮れない。偽のダイアログ画像を作らない。撮れないものは撮れないと書き、実測値を代わりに出す
 
 ### マスクの限界
 
-停止表示の静止画は Playwright の `mask` で確実に隠れる。
+停止表示の静止画は矩形の塗りつぶしで確実に隠れる。
 早送り区間は矩形を被せるだけなので、**要素がスクロールや遷移で動くとずれる**。
 実データが動く場面を早送りで流すときは、その区間を使わないか、静止画だけで構成する。

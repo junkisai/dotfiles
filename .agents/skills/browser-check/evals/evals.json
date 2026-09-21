@@ -4,37 +4,55 @@
     {
       "id": 1,
       "prompt": "サイドメニューの active 表示まわりを直したので、ブラウザで確認して",
-      "expected_output": "変更したメニューの遷移・強調表示を画面で確認する。文脈から local と判断できれば進め、対象が曖昧な場合だけ確認する。実行環境に指定されたブラウザツールを使う。",
+      "expected_output": "orca-cli のガイドを読み、確認用のタブを自分で作って Orca browser で観測する。変更したメニューの遷移・強調表示を画面で確認し、全コマンドに --page を付ける。文脈から local と判断できれば進め、対象が曖昧な場合だけ確認する。",
       "files": []
     },
     {
       "id": 2,
       "prompt": "/browser-check staging このPRをstagingで確認してPRにメモ残して",
-      "expected_output": "起動済み Chrome に attach し実認証で観測。結果をテキストのチェックリストとして gh pr comment で投稿する",
+      "expected_output": "Orca browser の Default プロファイルのログイン状態で観測する。未ログインなら認証情報を代入せずユーザーにログインを依頼する。結果をテキストのチェックリストとして gh pr comment で投稿する",
       "files": []
     },
     {
       "id": 3,
       "prompt": "/browser-check local エラー時の表示を作り込んで確認したい",
-      "expected_output": "既存の起動・テスト認証・モックの方法を確認し、エラー状態を再現して画面の結果を観測する。認証回避を新設する前提にしない。",
+      "expected_output": "既存の起動・テスト認証・モックの方法を確認し、エラー状態を再現して画面の結果を観測する。認証回避を新設する前提にしない。console / network で裏取りするなら操作の前に capture start を実行し、空の結果を『エラーなし』と読まない。",
       "files": []
     },
     {
       "id": 4,
       "prompt": "商品の一覧画面でロック中は編集ボタンを押せないようにしたので、ローカルで動作確認して動画をとっておいて。PRに貼りたい",
-      "expected_output": "観測だけで終わらせず、収録して注釈付き動画まで仕上げる。references/recording.md を読み、mark() を呼んだ項目だけを停止点にする。拡大範囲はセレクタで指定し座標を手入力しない。出力先は ~/Downloads/browser-check/<日付-対象>/ で、動画は gh から添付できないため場所を伝えて手で貼ってもらうよう案内する。",
+      "expected_output": "観測だけで終わらせず、収録して注釈付き動画まで仕上げる。references/recording.md を読み、lib/recorder.js の start / mark / stop を使う。mark を打った項目だけを停止点にし、拡大範囲は --focus のセレクタで指定して座標を手入力しない。start は確認専用のタブで実行し、ペインが画面に見えていなければ録画不能とその理由を伝える。出力先は ~/Downloads/browser-check/<日付-対象>/ で、動画は gh から添付できないため場所を伝えて手で貼ってもらうよう案内する。",
       "files": []
     },
     {
       "id": 5,
       "prompt": "/browser-check staging --record デプロイした変更をstagingで確認して動画で残して",
-      "expected_output": "既存セッションを保護して動画を収録する。録画権限がなければ録画不能を報告し、可能な確認は進める。静止画を動画の完成扱いにせず、形式を変える場合は確認する。実データをマスクする。",
+      "expected_output": "既存セッションを保護して動画を収録する。Orca でそのタブが画面に見えていない、または画面収録の権限がなければ録画不能を報告し、可能な確認は進める。静止画を動画の完成扱いにせず、形式を変える場合は確認する。実データは --mask で隠す。",
       "files": []
     },
     {
       "id": 6,
       "prompt": "/browser-check compare 保存エラーの表示を直したので修正前後を並べた動画がほしい",
-      "expected_output": "修正前後の対象と安全な切り替え方法を既存設定・履歴から確認する。不明な情報だけ質問し、ユーザーの未コミット変更を破棄しない。同じ条件で観測して比較動画を生成する。",
+      "expected_output": "修正前後の対象と安全な切り替え方法を既存設定・履歴から確認する。不明な情報だけ質問し、ユーザーの未コミット変更を破棄しない。同じ条件で before / after をそれぞれ収録し、recorder.js の merge で1本にまとめて比較動画を生成する。",
+      "files": []
+    },
+    {
+      "id": 7,
+      "prompt": "ログイン画面のスマホアプリを直したので、iOSシミュレータで確認して",
+      "expected_output": "orca-emulator のガイドを読み、UDID で端末を指定する（同名の端末が複数ある）。attach して ax で要素と frame を取り、frame 中心を tap して結果を ax で確認する。起動済みの端末を勝手に shutdown せず、終了時に emulator kill でヘルパーを止める。",
+      "files": []
+    },
+    {
+      "id": 8,
+      "prompt": "iOSシミュレータでこのアプリの設定画面を確認して。Xcode 27 を使っていて orca emulator attach が SimulatorKit のエラーで失敗する",
+      "expected_output": "原因（Orca の serve-sim が SimulatorKit を見つけられない、Xcode と Orca のバージョン）を報告する。Xcode 側のファイルを書き換えて回避しない。simctl の screenshot などで実施できる表示の確認は進め、Orca 経由の操作が必要な項目は未確認として残す。",
+      "files": []
+    },
+    {
+      "id": 9,
+      "prompt": "Android エミュレータで、ログイン失敗時のエラー表示を確認して",
+      "expected_output": "orca-emulator-android のガイドを読み、devices で serial を確認して attach する。install / launch でアプリを起動し、ax でエラー文言を確認する。裏取りに logcat を使う。終了時に emulator kill でヘルパーを止める。",
       "files": []
     }
   ]
