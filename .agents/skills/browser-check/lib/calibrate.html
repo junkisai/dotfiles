@@ -1,0 +1,9 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>browser-check calibrate</title>
+<!--
+  recorder.js が Orca の browser ペインの画面上の位置を割り出すための目印。
+  ペイン全面をマゼンタで塗り、画面収録の中でその矩形を探す。
+  window.screenX/outerWidth は Orca ウィンドウ全体を返し、ペインの位置は取れないため。
+-->
+<style>html,body{margin:0;height:100%;background:#ff00ff}</style>
