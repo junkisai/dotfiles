@@ -11,7 +11,7 @@ eval "$(pyenv init -)"
 # rbenv。本体は brew で入るので PATH 追加は要らず、shims の登録だけを行う
 eval "$(rbenv init - zsh)"
 
-# pipx が入れる CLI（mlx-whisper など）と、awake / nap
+# pipx が入れる CLI（mlx-whisper など）
 export PATH="$HOME/.local/bin:$PATH"
 
 # fnm (Node.js version manager)

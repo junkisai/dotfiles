@@ -51,6 +51,7 @@ brew "ffmpeg"
 
 # --- アプリ ---
 cask "1password"
+cask "capsomnia"
 cask "chatgpt"
 cask "claude"
 cask "discord"
