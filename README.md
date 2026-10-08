@@ -8,9 +8,6 @@ Mac の設定・アプリ一覧・Claude Code / Codex の設定とスキルを1�
 | `docs/setup.md` | brew では入らないもののセットアップ手順 |
 | `.agents/skills/` | Claude Code のスキル。`~/.claude/skills` と `~/.agents/skills` からリンクを張る |
 | `.zshrc` `.gitconfig` `.config/` | シェルと各種ツールの設定 |
-| `bin/` | `~/.local/bin` に置く自作スクリプト（`awake` / `nap`） |
-| `raycast/` | `~/raycast-scripts` に置く Raycast の Script Commands。`bin/` のスクリプトを呼ぶ |
-| `etc/sudoers.d/` | `/etc/sudoers.d/` に**コピーで**置く sudo 設定。`awake` / `nap` が叩く pmset だけをパスワードなしで通す |
 | `claude/` | `~/.claude/` に置く Claude Code 本体の設定とフック。名前を `.claude/` にすると、このリポジトリのプロジェクト設定として読まれてしまうので分けてある |
 | `codex/config.toml` | `~/.codex/config.toml` に取り込む Codex の共通設定（モデル・推論強度・自動承認レビュー） |
 
