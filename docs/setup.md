@@ -52,7 +52,7 @@ git clone https://github.com/zsh-users/zsh-autosuggestions \
 curl -fsSL https://get.pnpm.io/install.sh | SHELL=/bin/zsh sh -
 
 # pnpm グローバル
-pnpm add -g @openai/codex gitmoji-cli wrangler
+pnpm add -g gitmoji-cli wrangler
 
 # pipx（transcribe-audio スキルが使う）
 pipx install mlx-whisper
