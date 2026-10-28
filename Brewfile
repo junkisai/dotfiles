@@ -44,6 +44,7 @@ brew "postgresql@14"
 
 # --- AI CLI ---
 brew "gemini-cli"
+cask "codex"
 
 # --- メディア ---
 # transcribe-audio が ffmpeg/ffprobe で音声を分割する。vhs の依存でもある。
