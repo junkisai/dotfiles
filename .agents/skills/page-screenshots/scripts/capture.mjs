@@ -3,14 +3,14 @@
  * page-screenshots の撮影スクリプト。npm の依存はなく、Node 標準の fetch / WebSocket で Chrome を操作する。
  *
  *   node capture.mjs <URL> [--name lp] [--out DIR] [--viewports 390x844@3,1440x900@2]
- *                    [--sections "#a,#b"] [--keep-fixed] [--wait MS] [--max-seconds N] [--dry-run]
+ *                    [--sections "#a,#b"] [--max-height PX] [--keep-fixed] [--wait MS] [--max-seconds N] [--dry-run]
  *
- * ページをセクションの切れ目で区切り、撮れる高さの上限までつなげて PNG に保存する。
+ * ページをセクションの切れ目で区切り、見やすい高さに収まる範囲でつなげて PNG に保存する。
  * 標準出力には結果の JSON だけを出す。途中経過は標準エラーに出す。
  *
  * Chrome は大きすぎる撮影でエラーを返さず止まる。止まる大きさは決まっておらず、中身にも左右される
  * （スマホ 3 倍の 1170×7026 は、写真の多いページの先頭では止まり、文字の多いところでは撮れる）。
- * 起動オプションや撮り方を変えても解消しないので、高さの上限を決め打ちせず、
+ * 起動オプションや撮り方を変えても解消しないので、撮れる高さを決め打ちせず、
  * 前のセクションから順につなげて撮り、止まったらその手前までを 1 枚にする。
  */
 import { spawn } from "node:child_process";
@@ -24,6 +24,8 @@ const DEFAULT_VIEWPORTS = "390x844@3,1440x900@2";
 const DEFAULT_SCALE = 2;
 const DEFAULT_WAIT_MS = 4000;
 const DEFAULT_MAX_SECONDS = 600;
+// 保存する画像の高さ。これより長いと、ビューアーで全体を出したときに縮小されて読めない
+const DEFAULT_MAX_HEIGHT = 6000;
 // 撮れるときは大きな画像でも数秒で返る
 const CAPTURE_TIMEOUT_MS = 20_000;
 // Chrome が扱えるテクスチャの上限。これを超える高さは試すまでもなく止まる
@@ -33,12 +35,13 @@ const LOAD_TIMEOUT_MS = 30_000;
 const PREPARE_TIMEOUT_MS = 90_000;
 
 const USAGE = `usage: node capture.mjs <URL> [--name NAME] [--out DIR] [--viewports WxH[@倍率],...]
-                        [--sections "CSS セレクタ"] [--keep-fixed] [--wait MS] [--max-seconds N] [--dry-run]
+                        [--sections "CSS セレクタ"] [--max-height PX] [--keep-fixed] [--wait MS] [--max-seconds N] [--dry-run]
 
   --name         保存先のフォルダ名に使う（既定: URL から作る）
   --out          保存先のフォルダを作る場所（既定: ~/Downloads/page-screenshots）
   --viewports    画面サイズと倍率。@ を省略すると ${DEFAULT_SCALE} 倍（既定: ${DEFAULT_VIEWPORTS}）
   --sections     自動検出の代わりに、切れ目にする要素を CSS セレクタで指定する
+  --max-height   つなげた画像の高さの上限。保存する PNG のピクセルで指定する（既定: ${DEFAULT_MAX_HEIGHT}）
   --keep-fixed   画面に固定された要素を隠さない
   --wait         読み込みのあとに待つミリ秒。時間で消えるオープニングのため（既定: ${DEFAULT_WAIT_MS}）
   --max-seconds  全体の時間の上限（既定: ${DEFAULT_MAX_SECONDS}）
@@ -609,9 +612,15 @@ class ViewportCapture {
         continue;
       }
 
-      // 次のセクションをつなげて撮れる限り、伸ばす
+      // セクションの途中では切らないので、1 区間で上限を超えるものはそのまま残す
+      if (this.#deviceSize(first).height > this.options.maxHeight) {
+        this.#warn(`「${first.name}」は 1 区間で ${this.options.maxHeight}px を超える。途中で切らず、長いまま保存した`);
+      }
+
+      // 次のセクションをつなげて、上限に収まって撮れる限り、伸ばす
       let last = index;
       while (last + 1 < sections.length) {
+        if (this.#deviceSize({ start: first.start, end: sections[last + 1].end }).height > this.options.maxHeight) break;
         if (Date.now() > this.softDeadline) {
           this.#warn("時間の上限に近づいたので、つなげるのをやめた。枚数が多くなっている可能性がある");
           break;
@@ -695,6 +704,7 @@ function parseOptions() {
       out: { type: "string" },
       viewports: { type: "string", default: DEFAULT_VIEWPORTS },
       sections: { type: "string" },
+      "max-height": { type: "string", default: String(DEFAULT_MAX_HEIGHT) },
       "keep-fixed": { type: "boolean", default: false },
       wait: { type: "string", default: String(DEFAULT_WAIT_MS) },
       "max-seconds": { type: "string", default: String(DEFAULT_MAX_SECONDS) },
@@ -712,12 +722,16 @@ function parseOptions() {
   }
   if (!["http:", "https:", "file:"].includes(url.protocol)) throw new FatalError(`開けるのは http / https / file だけ: ${url.protocol}`);
 
+  const maxHeight = Number(values["max-height"]);
+  if (!(maxHeight > 0)) throw new FatalError(`--max-height の値が正しくない: ${values["max-height"]}`);
+
   return {
     url: url.href,
     name: slugify(values.name ?? "") || nameFromUrl(url.href),
     outRoot: values.out ?? join(homedir(), "Downloads", "page-screenshots"),
     viewports: parseViewports(values.viewports),
     sections: values.sections ?? null,
+    maxHeight,
     keepFixed: values["keep-fixed"],
     wait: Number(values.wait),
     maxSeconds: Number(values["max-seconds"]),
@@ -737,9 +751,9 @@ async function main() {
   report.url = options.url;
 
   if (options.dryRun) {
-    const { name, outRoot, viewports, sections, keepFixed, wait, maxSeconds } = options;
+    const { name, outRoot, viewports, sections, maxHeight, keepFixed, wait, maxSeconds } = options;
     process.stdout.write(
-      `${JSON.stringify({ url: options.url, outDir: join(outRoot, `${name}-${timestamp()}`), viewports, sections, keepFixed, wait, maxSeconds }, null, 2)}\n`,
+      `${JSON.stringify({ url: options.url, outDir: join(outRoot, `${name}-${timestamp()}`), viewports, sections, maxHeight, keepFixed, wait, maxSeconds }, null, 2)}\n`,
     );
     reported = true;
     return;
