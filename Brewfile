@@ -50,6 +50,10 @@ cask "codex"
 # transcribe-audio が ffmpeg/ffprobe で音声を分割する。vhs の依存でもある。
 brew "ffmpeg"
 
+# --- 文書 ---
+# report-pdf が pdfinfo/pdftoppm で、作った PDF のページ数を数え、全ページを画像にして確かめる。
+brew "poppler"
+
 # --- アプリ ---
 cask "1password"
 cask "capsomnia"
