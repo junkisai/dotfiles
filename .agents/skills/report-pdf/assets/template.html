@@ -234,6 +234,21 @@
 
   .sources { font-size: 8pt; color: var(--text-sub); }
   .sources li { margin-bottom: 0.6mm; }
+
+  /* ---- 画面の画像 ---- */
+  img.shot { display: block; width: 100%; border: 1px solid var(--line); border-radius: 1.5mm; }
+  /* 直す前と直したあとの 2 枚並べ。スマホの縦長の画面は 1 枚 50〜60mm にする */
+  .pair { display: flex; justify-content: center; gap: 7mm; align-items: flex-start; margin: 3mm 0 4mm; break-inside: avoid; }
+  .pair .col { flex: none; width: 55mm; }
+  .pair .cap { font-size: 8.8pt; font-weight: 700; margin-bottom: 1.5mm; }
+  .pair .desc { font-size: 8.3pt; color: var(--text-sub); margin-top: 1.5mm; line-height: 1.6; }
+  .tag { display: inline-block; font-weight: 700; border-radius: 1mm; padding: 0 1.8mm; margin-right: 1.5mm; }
+  .tag.before { background: var(--surface); color: var(--text-sub); }
+  .tag.after { background: var(--emphasis-surface); color: var(--emphasis-text); }
+  /* 状態の札。済んだものは主色、これからのものは灰色 */
+  .status { display: inline-block; font-weight: 700; font-size: 8.4pt; border-radius: 1mm; padding: 0.2mm 2mm; white-space: nowrap; }
+  .status.done { background: var(--emphasis-surface); color: var(--emphasis-text); }
+  .status.next { background: var(--surface); color: var(--text-sub); }
 </style>
 </head>
 <body>
@@ -323,6 +338,30 @@
 <div class="callout">
   <div class="ttl">ご提案</div>
   <p>先方に判断してほしいことや、こちらからの提案を一、二文で。</p>
+</div>
+
+<!-- 件ごとの状態。済んだものは .done、これからのものは .next -->
+<table>
+  <thead><tr><th style="width:55%">件</th><th>状態</th></tr></thead>
+  <tbody>
+    <tr><td>件 A</td><td><span class="status done">解消しました</span></td></tr>
+    <tr><td>件 B</td><td><span class="status next">次の更新で解消</span></td></tr>
+  </tbody>
+</table>
+
+<!-- 画面の画像。直す前と直したあとを、同じ項目・同じ位置で撮って並べる。
+     src は資料の HTML からの相対パスで書く（build.sh が埋め込む）。横長の画面は .pair を使わず段の幅で 1 枚 -->
+<div class="pair">
+  <div class="col">
+    <div class="cap"><span class="tag before">直す前</span>〇月〇日の画面</div>
+    <img class="shot" src="img/before.jpg" alt="直す前の画面で見えていること">
+    <p class="desc">何が困っていたかを一、二文で。</p>
+  </div>
+  <div class="col">
+    <div class="cap"><span class="tag after">直したあと</span>同じ画面</div>
+    <img class="shot" src="img/after.jpg" alt="直したあとの画面で見えていること">
+    <p class="desc">何が変わったかを一、二文で。</p>
+  </div>
 </div>
 
 <h3>出典（2026年1月1日確認）</h3>
