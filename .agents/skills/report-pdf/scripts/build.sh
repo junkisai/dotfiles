@@ -85,15 +85,60 @@ echo "pdf: $out"
 echo "pages: $pages"
 echo "page_images: $pages_dir"
 
-# ページごとに、本文の文字がページのどこまで下にあるか（%）を出す。
+# ページごとに、本文の文字がページのどこまで下にあるか（%）を出す。本文の範囲は、資料の @page の上下の余白の内側。
 # 最後のページ以外で 55% に届かないページは、下半分が空いている。章の終わりなら問題ないが、
 # 表や画像の塊が次のページへ送られた、1〜2 行だけが送られた、のどちらかであることが多い。
-python3 - "$out" "$pages" <<'PY'
+python3 - "$out" "$pages" "$html" <<'PY'
 import re, subprocess, sys
 
-pdf, pages = sys.argv[1], int(sys.argv[2])
+pdf, pages, html = sys.argv[1], int(sys.argv[2]), sys.argv[3]
 MM = 72 / 25.4
-TOP, BOTTOM = 20 * MM, 18 * MM  # ひな形の @page の上下の余白
+
+
+def mm(value):
+    """'20mm' や '0' を mm の数にする。mm 以外の単位なら None"""
+    m = re.fullmatch(r"([\d.]+)(mm)?", value.strip())
+    if not m or (m.group(2) is None and float(m.group(1)) != 0):
+        return None
+    return float(m.group(1))
+
+
+def page_margins(path):
+    """資料の @page の上下の余白（mm）。読めなければ None"""
+    css = open(path, encoding="utf-8").read()
+    # @page の中の、入れ子の @top-right などより前に書いた宣言を読む。@page :first などは見ない
+    block = re.search(r"@page\s*\{([^@}]*)", css)
+    if not block:
+        return None
+    decls = block.group(1)
+    top = bottom = None
+    short = re.search(r"(?<![-\w])margin\s*:\s*([^;]+)", decls)
+    if short:
+        values = [mm(v) for v in short.group(1).split()]
+        if None in values or not 1 <= len(values) <= 4:
+            return None
+        top = values[0]
+        bottom = values[2] if len(values) >= 3 else values[0]
+    for side in ("top", "bottom"):
+        one = re.search(rf"margin-{side}\s*:\s*([^;]+)", decls)
+        if one:
+            value = mm(one.group(1))
+            if value is None:
+                return None
+            if side == "top":
+                top = value
+            else:
+                bottom = value
+    if top is None or bottom is None:
+        return None
+    return top, bottom
+
+
+margins = page_margins(html)
+if margins is None:
+    margins = (20, 18)
+    print("注意: @page の上下の余白を mm で読めなかったので、上 20mm・下 18mm とみなして fill を出す")
+TOP, BOTTOM = margins[0] * MM, margins[1] * MM
 fills = []
 for i in range(1, pages + 1):
     xml = subprocess.run(
