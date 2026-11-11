@@ -1,6 +1,6 @@
 ---
 name: browser-check
-description: "Web UI やモバイルアプリの表示・遷移・操作を、Orca の browser とエミュレータで確認する。録画や修正前後の比較は依頼された場合に行う。"
+description: "Web 画面をブラウザで見る・操作するときは必ずこれを使う（ローカルの dev を立ち上げたあとの確認、ログインを通す、スクリーンショット、動作確認）。chrome-devtools や Claude in Chrome より先に使う。表示・遷移・操作の確認は Orca の browser とエミュレータで行い、録画や修正前後の比較は依頼された場合に行う。"
 ---
 
 # 動作確認（Orca browser / エミュレータ）
